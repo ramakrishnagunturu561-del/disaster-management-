@@ -1,0 +1,199 @@
+/* App-specific styles */
+
+/* Ensure full height layout */
+html, body, #root {
+  height: 100%;
+}
+
+/* Custom animations */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Progress bar styling */
+[data-slot="progress-indicator"] {
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px hsl(var(--primary) / 0.15);
+}
+
+/* Map popup styling */
+.leaflet-popup-content-wrapper {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-popup-tip {
+  background: hsl(var(--card));
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: hsl(var(--muted-foreground));
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: hsl(var(--foreground));
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--defense-navy));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Timeline styling */
+.timeline-line {
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: hsl(var(--border));
+}
+
+/* Status indicators */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.active {
+  background: hsl(var(--safe-green));
+  box-shadow: 0 0 8px hsl(var(--safe-green));
+}
+
+.status-dot.warning {
+  background: hsl(var(--alert-yellow));
+  box-shadow: 0 0 8px hsl(var(--alert-yellow));
+}
+
+.status-dot.critical {
+  background: hsl(var(--alert-red));
+  box-shadow: 0 0 8px hsl(var(--alert-red));
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Heatmap overlay effect */
+.heatmap-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Drag and drop zone */
+.drag-active {
+  border-color: hsl(var(--primary)) !important;
+  background: hsl(var(--primary) / 0.1) !important;
+}
+
+/* Line chart tooltip */
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+/* Tab styling */
+[data-state="active"][role="tab"] {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+/* Badge variants */
+.badge-critical {
+  background: hsl(var(--alert-red) / 0.2);
+  color: hsl(var(--alert-red));
+  border-color: hsl(var(--alert-red) / 0.5);
+}
+
+.badge-high {
+  background: hsl(var(--alert-orange) / 0.2);
+  color: hsl(var(--alert-orange));
+  border-color: hsl(var(--alert-orange) / 0.5);
+}
+
+.badge-medium {
+  background: hsl(var(--alert-yellow) / 0.2);
+  color: hsl(var(--alert-yellow));
+  border-color: hsl(var(--alert-yellow) / 0.5);
+}
+
+.badge-low {
+  background: hsl(var(--safe-green) / 0.2);
+  color: hsl(var(--safe-green));
+  border-color: hsl(var(--safe-green) / 0.5);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
