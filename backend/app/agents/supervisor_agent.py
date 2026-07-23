@@ -25,19 +25,23 @@ class SupervisorAgent:
         )
 
         incident_type = state.incident_type.lower()
+        has_image = bool(state.drone_image_bytes)
+        has_text = bool(state.emergency_text_reports)
 
-        # Determine agent routing plan based on disaster domain
-        required_agents = ["VISION_AGENT", "EMERGENCY_INTELLIGENCE_AGENT", "RISK_AGENT", "RESPONSE_PLANNER"]
+        # Phase 1 Conditional Routing Logic
+        required_agents = []
 
-        if incident_type in ["flood", "hurricane"]:
-            required_agents.insert(1, "WEATHER_AGENT")
-            required_agents.insert(2, "SENSOR_AGENT")
-            required_agents.append("ROUTE_AGENT")
-            required_agents.append("RESOURCE_AGENT")
-        elif incident_type in ["earthquake", "industrial", "structural"]:
-            required_agents.insert(1, "SENSOR_AGENT")
-            required_agents.append("RESOURCE_AGENT")
-            required_agents.append("ROUTE_AGENT")
+        if has_image:
+            required_agents.append("VISION_AGENT")
+        if has_text or not has_image:
+            required_agents.append("EMERGENCY_INTELLIGENCE_AGENT")
+
+        required_agents.extend(["RISK_AGENT", "RESPONSE_PLANNER"])
+
+        # Store routing plan in state assumptions & metadata
+        state.assumptions.append(
+            f"Supervisor classification: '{incident_type.upper()}'. Pipeline routing: {', '.join(required_agents)}."
+        )
 
         # Optional LLM enhancement for classification summary
         llm_prompt = f"Summarize the incident commander's initial tactical assessment for a {incident_type} disaster at coordinates {state.location}."

@@ -26,6 +26,7 @@ class CrisisState(BaseModel):
 
     # Incident Core Metadata
     incident_id: str
+    incident: Optional[Dict[str, Any]] = None
     incident_type: str  # flood, earthquake, fire, hurricane, industrial, etc.
     title: str = "Disaster Incident"
     location: Dict[str, float] = Field(default_factory=dict)  # {"latitude": 0.0, "longitude": 0.0}
@@ -38,6 +39,7 @@ class CrisisState(BaseModel):
 
     # Intelligence Agent Outputs
     vision_analysis: Optional[Dict[str, Any]] = None
+    intelligence_analysis: Optional[Dict[str, Any]] = None
     weather_intelligence: Optional[Dict[str, Any]] = None
     sensor_intelligence: Optional[Dict[str, Any]] = None
     emergency_reports: List[Dict[str, Any]] = Field(default_factory=list)
