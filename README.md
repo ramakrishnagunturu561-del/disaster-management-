@@ -1,316 +1,262 @@
-# AI-Driven Disaster & Homeland Security Decision Support System
+# CrisisMind AI
 
-## Executive Summary
+### Agentic Disaster Intelligence & Emergency Decision Support System
 
-The **AI-Driven Disaster & Homeland Security Decision Support System (DSS)** is a comprehensive, real-time platform designed to assist emergency responders, government agencies, and homeland security operations in making rapid, data-driven decisions during crisis situations. By integrating multi-source data streams including satellite imagery, drone footage, IoT sensors, emergency calls, and social media reports, the system provides actionable intelligence with explainable AI outputs.
+> **From fragmented crisis data to coordinated, explainable action.**
 
----
+CrisisMind AI is an agentic AI-powered disaster intelligence and emergency decision-support platform designed to transform fragmented crisis information into coordinated, explainable, and safety-validated response plans.
 
-## Key Features
+The platform combines a **multi-agent LangGraph architecture**, computer vision, NLP, live weather intelligence, IoT sensor analysis, risk assessment, resource allocation, evacuation planning, safety validation, and human-in-the-loop decision governance.
 
-### 1. Multi-Source Data Integration
-- **Satellite Imagery**: Real-time damage assessment via computer vision
-- **Drone Footage**: Aerial surveillance and hotspot detection
-- **IoT Sensor Streams**: Environmental monitoring (temperature, seismic activity, radiation)
-- **Emergency Call Transcripts**: NLP processing for incident classification
-- **Social Media Reports**: Crowdsourced intelligence and sentiment analysis
-
-### 2. AI-Powered Analysis Engine
-
-#### Computer Vision Module
-- Damage detection using CNN and YOLO architectures
-- Building collapse identification
-- Infrastructure damage assessment
-- Flood and fire extent mapping
-
-#### Natural Language Processing
-- Emergency call transcript analysis
-- Social media report classification
-- Sentiment analysis for public panic levels
-- Named entity extraction for location and casualty information
-
-#### Predictive Risk Models
-- Time-series forecasting for disaster progression
-- Survival probability estimation
-- Resource demand prediction
-
-### 3. Risk Scoring Engine
-
-The system generates three critical risk metrics:
-
-| Metric | Range | Description |
-|--------|-------|-------------|
-| **Damage Severity Score** | 0-100% | Quantifies infrastructure and environmental damage |
-| **Human Survival Probability** | 0-100% | Estimates survival likelihood based on time, location, and disaster type |
-| **Threat Level Indicator** | Low/Medium/High/Critical | Overall threat assessment combining multiple factors |
-
-### 4. Priority Zone Classification
-
-Zones are automatically categorized using a weighted scoring algorithm:
-
-- **Green Zones** (Safe): Minimal damage, stable conditions
-- **Yellow Zones** (Caution): Moderate damage, potential hazards
-- **Red Zones** (Critical): Severe damage, immediate response required
-- **Black Zones** (Extreme): Catastrophic damage, restricted access
-
-### 5. Decision Recommendation Engine
-
-The system provides actionable recommendations:
-
-- **Resource Allocation**: Optimal deployment of ambulances, rescue teams, and equipment
-- **Evacuation Planning**: Priority areas and safe route identification
-- **Surveillance Deployment**: Drone and satellite tasking recommendations
-- **Communication Strategies**: Public alert and information dissemination
-
-### 6. Explainable AI (XAI)
-
-All AI decisions are transparent and interpretable:
-
-- **Visual Heatmaps**: Highlighted damage regions on imagery
-- **Textual Reasoning**: Natural language explanations for recommendations
-- **Confidence Scores**: Uncertainty quantification for each prediction
-- **Audit Trails**: Complete decision history for post-incident analysis
+CrisisMind AI supports both:
+- **Simulation Mode** for controlled disaster scenarios and demonstrations
+- **Live Intelligence Mode** for real-world data-driven crisis analysis
 
 ---
 
-## Dual-Use Functionality
+## 🚨 Problem Statement
 
-### Civilian Disaster Response
-- Natural disaster management (hurricanes, earthquakes, floods)
-- Public health emergencies
-- Industrial accident response
-- Search and rescue operations
+During floods, earthquakes, fires, cyclones, and other large-scale emergencies, critical information arrives from multiple disconnected sources:
 
-### Homeland Security Operations
-- Terrorism incident response
-- Critical infrastructure protection
-- Border security and surveillance
-- CBRN (Chemical, Biological, Radiological, Nuclear) threat detection
+- Drone and satellite imagery
+- Live weather services
+- IoT sensors
+- Emergency reports & call logs
+- Field personnel telemetry
+- Hospitals and shelters
+- Resource inventories
+- Road and infrastructure status
+
+Emergency teams must rapidly answer critical questions:
+- Which areas are most critical?
+- Where are people most at risk?
+- Which evacuation routes are safe?
+- Which shelters still have capacity?
+- How should limited rescue resources be allocated?
+- Is the proposed response plan actually safe and feasible?
+
+CrisisMind AI addresses this problem using a coordinated **multi-agent AI system**.
 
 ---
 
-## System Architecture
+## 🏗 System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         DATA INGESTION LAYER                                │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐  │
-│  │  Satellite  │ │    Drone    │ │ IoT Sensors │ │  Emergency/Social   │  │
-│  │   Images    │ │   Footage   │ │   Streams   │ │      Reports        │  │
-│  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘ └──────────┬──────────┘  │
-└─────────┼───────────────┼───────────────┼───────────────────┼─────────────┘
-          │               │               │                   │
-          ▼               ▼               ▼                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      PREPROCESSING LAYER                                    │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────────┐   │
-│  │ Image Normaliz. │ │  NLP Cleaning   │ │    Anomaly Detection        │   │
-│  └────────┬────────┘ └────────┬────────┘ └─────────────┬───────────────┘   │
-└───────────┼───────────────────┼────────────────────────┼───────────────────┘
-            │                   │                        │
-            ▼                   ▼                        ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         AI MODEL LAYER                                      │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────────┐   │
-│  │ Computer Vision │ │      NLP        │ │   Predictive Risk Models    │   │
-│  │  (CNN, YOLO)    │ │ (BERT-based)    │ │  (Time-series Forecasting)  │   │
-│  └────────┬────────┘ └────────┬────────┘ └─────────────┬───────────────┘   │
-└───────────┼───────────────────┼────────────────────────┼───────────────────┘
-            │                   │                        │
-            └───────────────────┼────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    RISK SCORING & DECISION ENGINE                           │
-│  ┌─────────────────────────────┐ ┌─────────────────────────────────────┐   │
-│  │    Weighted Risk Scoring    │ │   Rule-based + ML Hybrid Decisions  │   │
-│  └─────────────┬───────────────┘ └─────────────────┬─────────────────┘   │
-└────────────────┼───────────────────────────────────┼─────────────────────┘
-                 │                                   │
-                 ▼                                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      EXPLAINABLE AI MODULE                                  │
-│  ┌─────────────────────────────┐ ┌─────────────────────────────────────┐   │
-│  │     Heatmap Generation      │ │    Textual Reasoning Engine         │   │
-│  └─────────────┬───────────────┘ └─────────────────┬─────────────────┘   │
-└────────────────┼───────────────────────────────────┼─────────────────────┘
-                 │                                   │
-                 └───────────────────┬───────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    API & DASHBOARD LAYER                                    │
-│  ┌─────────────────────────────┐ ┌─────────────────────────────────────┐   │
-│  │      REST API (FastAPI)     │ │   Real-time Command Dashboard       │   │
-│  └─────────────────────────────┘ └─────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
+```text
+                    CRISISMIND AI
+                         |
+              OPERATIONAL MODE SELECTOR
+                         |
+          +--------------+--------------+
+          |                             |
+          v                             v
+   SIMULATION MODE              LIVE INTELLIGENCE MODE
+          |                             |
+ Vijayawada Scenario             Real Location
+ Simulated Sensors               Live Weather
+ Predefined Resources            Uploaded Images
+ Self-Correction Demo            Emergency Reports
+          |                      IoT / Resource Data
+          +-------------+---------------+
+                        |
+                        v
+               SUPERVISOR AGENT
+                        |
+            +-----------+-----------+
+            |           |           |
+            v           v           v
+        VISION      EMERGENCY    WEATHER
+        AGENT       INTELLIGENCE  AGENT
+            |           |           |
+            +-----------+-----------+
+                        |
+                  SENSOR AGENT
+                        |
+                        v
+                 RISK ASSESSMENT
+                        |
+             +----------+----------+
+             |                     |
+             v                     v
+       RESOURCE AGENT         ROUTE AGENT
+             |                     |
+             +----------+----------+
+                        |
+                        v
+               RESPONSE PLANNER
+                        |
+                        v
+                  SAFETY CRITIC
+                        |
+               +--------+--------+
+               |                 |
+             PASS               FAIL
+               |                 |
+               v                 v
+        HUMAN APPROVAL      TARGETED REPLAN
+               |                 |
+               +--------<--------+
+                        |
+                        v
+              FINAL RESPONSE PLAN
 ```
 
 ---
 
-## Technology Stack
+## 🤖 Multi-Agent Architecture
 
-### Backend
-- **Framework**: FastAPI (Python)
-- **AI/ML**: PyTorch, TensorFlow, OpenCV, Transformers (Hugging Face)
-- **Data Processing**: Pandas, NumPy, Apache Kafka
-- **Database**: PostgreSQL, Redis, Elasticsearch
-- **Cloud**: AWS/GCP/Azure with Kubernetes
+CrisisMind AI orchestrates autonomous agents using **LangGraph StateGraph**:
 
-### Frontend
-- **Framework**: React + TypeScript
-- **Styling**: Tailwind CSS
-- **Components**: shadcn/ui
-- **Visualization**: Leaflet (Maps), Recharts (Charts), D3.js
-- **State Management**: Zustand
-
-### Infrastructure
-- **Containerization**: Docker
-- **Orchestration**: Kubernetes
-- **CI/CD**: GitHub Actions
-- **Monitoring**: Prometheus, Grafana
+1. **Supervisor Agent (Incident Commander)**: Classifies incident type, evaluates available evidence, determines agent routing, and maintains shared crisis state.
+2. **Vision Intelligence Agent**: Uses YOLOv8 and OpenCV to detect damage, objects, and structural hazards from drone/satellite images.
+3. **Emergency Intelligence Agent**: Uses Transformers / DistilBERT / BERT NER to extract entities, locations, urgency indicators, and casualties from reports.
+4. **Weather Intelligence Agent**: Integrates live meteorological telemetry (precipitation, wind, flood risk) via Open-Meteo API.
+5. **Sensor Intelligence Agent**: Monitors IoT streams (water levels, smoke, temperature, gas leaks, seismic data) for threshold violations.
+6. **Risk Assessment Agent**: Calculates priority scores, threat levels, and survival-risk metrics across affected zones.
+7. **Resource Allocation Agent**: Assigns rescue teams, ambulances, boats, and drones under strict non-over-allocation constraints (`Allocated <= Available`).
+8. **Evacuation / Route Agent**: Evaluates road blockages, shelter capacities, travel distances, and safe corridors.
+9. **Response Planner Agent**: Synthesizes directives into structured operational proposals.
+10. **Safety Critic Agent**: Audits proposals against safety constraints (`RESOURCE_OVERALLOCATED`, `SHELTER_CAPACITY_EXCEEDED`, `ROUTE_BLOCKED`, `STALE_WEATHER`, `UNMET_CRITICAL_RESOURCE_NEED`).
 
 ---
 
-## Installation & Setup
+## 🔄 Self-Correction & Replanning Loop
 
-### Prerequisites
-- Python 3.9+
-- Node.js 18+
-- Docker
-- AWS/GCP/Azure account (for cloud deployment)
+Instead of failing silently or restarting execution from scratch, CrisisMind AI runs a feedback self-correction loop:
 
-### Backend Setup
+```text
+Plan v1 ---> Safety Critic (FAIL: SHELTER_CAPACITY_EXCEEDED)
+                 |
+                 v
+        Targeted Replanning (Route & Resource Agents)
+                 |
+                 v
+Plan v2 ---> Safety Critic (PASS) ---> Awaiting Human Approval
+```
+
+---
+
+## 👤 Human-in-the-Loop Governance
+
+Decisions follow strict operational states:
+
+```text
+PROPOSED ---> AWAITING_HUMAN_APPROVAL ---> APPROVED / MODIFIED / REJECTED
+```
+
+- **Approve**: Authorize emergency deployment.
+- **Modify**: Issue commander-level modifications to re-evaluate state.
+- **Reject**: Reject proposed response plan with justification.
+- **Human Override**: Override unresolved warnings with explicit logged reasoning.
+
+---
+
+## 🔍 Explainable AI & Provenance Tracking
+
+- **Explainable AI (XAI)**: Breaks down decision reasoning into **Facts**, **Derived Metrics**, **Decision Rationale**, **Assumptions**, and **Warnings**.
+- **Data Provenance**: Every output is tagged with transparent provenance categories:
+  - `REAL` (Open-Meteo Weather, Field Data)
+  - `USER_PROVIDED` (Uploaded Drone Images, Reports)
+  - `SIMULATION` (Predefined Telemetry)
+  - `DERIVED` (Risk Scores, Priorities)
+
+---
+
+## 🛠 Technology Stack
+
+### Frontend (`/app`)
+- **Core**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, Radix UI, Lucide Icons
+- **Mapping & Charts**: Leaflet, Recharts
+
+### Backend (`/backend`)
+- **Framework**: Python 3.14+, FastAPI, Pydantic v2
+- **Agentic Orchestration**: LangGraph, LangChain Core
+- **Computer Vision & NLP**: YOLOv8, OpenCV, HuggingFace Transformers, DistilBERT
+- **Database & Services**: SQLAlchemy, AsyncPG, WebSockets, Open-Meteo API
+
+---
+
+## ⚙️ Installation & Setup Guide
+
+### 1. Clone Repository
+```bash
+git clone <repository_url>
+cd disaster-management-
+```
+
+### 2. Backend Setup
 ```bash
 cd backend
+python -m venv venv
+```
+- **Windows**: `.\venv\Scripts\Activate.ps1`
+- **Linux/Mac**: `source venv/bin/activate`
+
+Install dependencies:
+```bash
 pip install -r requirements.txt
-python main.py
 ```
 
-### Frontend Setup
+Start backend API:
 ```bash
-cd frontend
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+- **Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### 3. Frontend Setup
+In a new terminal:
+```bash
+cd app
 npm install
 npm run dev
 ```
+- **Command Center Dashboard**: [http://localhost:5173](http://localhost:5173)
 
-### Docker Deployment
+---
+
+## 🧪 Verification & Testing
+
+Run full backend unit and integration test suite:
 ```bash
-docker-compose up -d
+python -m pytest backend/tests/test_phase1.py backend/tests/test_phase2.py backend/tests/test_phase3.py backend/tests/test_phase5.py
 ```
 
----
+Run standalone multi-agent verification:
+```bash
+python backend/tests/run_tests.py
+```
 
-## API Endpoints
+Build production frontend:
+```bash
+cd app
+npm run build
+```
 
-### Data Ingestion
-- `POST /api/v1/upload/image` - Upload satellite/drone imagery
-- `POST /api/v1/upload/sensor` - Submit IoT sensor data
-- `POST /api/v1/upload/report` - Submit text reports
-
-### Analysis
-- `GET /api/v1/analysis/damage/{image_id}` - Get damage analysis
-- `GET /api/v1/analysis/risk/{zone_id}` - Get risk scores
-- `GET /api/v1/analysis/recommendations` - Get action recommendations
-
-### Dashboard
-- `GET /api/v1/dashboard/map` - Get map data with zones
-- `GET /api/v1/dashboard/timeline` - Get emergency timeline
-- `GET /api/v1/dashboard/resources` - Get resource status
-
----
-
-## Ethical AI Considerations
-
-### Fairness
-- Bias detection and mitigation in training data
-- Regular audits for demographic disparities
-- Transparent model performance metrics across different populations
-
-### Privacy
-- Data anonymization for personal information
-- Secure communication channels
-- Compliance with GDPR, HIPAA, and other regulations
-
-### Accountability
-- Complete audit trails for all decisions
-- Human-in-the-loop for critical decisions
-- Clear delineation of AI vs. human responsibility
-
-### Transparency
-- Explainable AI outputs for all recommendations
-- Public documentation of model limitations
-- Open communication about system capabilities
+| Verification Suite | Test Count | Result |
+|---|---|:---:|
+| Phase 1 — Core Agentic Foundation | 10 / 10 | **PASS** |
+| Phase 2 — Operational Intelligence | 5 / 5 | **PASS** |
+| Phase 3 — Safety Critic & Self-Correction | 7 / 7 | **PASS** |
+| Phase 5 — Dual-Mode Operational Suite | 3 / 3 | **PASS** |
+| Multi-Agent Graph End-to-End Suite | 5 / 5 | **PASS** |
+| Frontend TypeScript & Vite Build | 0 Errors | **PASS** |
 
 ---
 
-## Use Cases
+## ⚠️ Safety & Responsible Use Disclaimer
 
-### Scenario 1: Earthquake Response
-1. System detects seismic activity from IoT sensors
-2. Satellite imagery analyzed for building damage
-3. Emergency calls processed for casualty reports
-4. Risk scores generated for affected neighborhoods
-5. Rescue teams deployed based on priority zones
-6. Evacuation routes recommended for safe areas
-
-### Scenario 2: Hurricane Landfall
-1. Weather data integrated with predictive models
-2. Flood extent mapped using drone footage
-3. Social media monitored for distress signals
-4. Resource pre-positioned in anticipated impact zones
-5. Real-time updates provided to emergency managers
-
-### Scenario 3: Terrorism Incident
-1. Multiple report correlation for threat validation
-2. Surveillance footage analyzed for suspect identification
-3. Critical infrastructure risk assessment
-4. Coordinated response across multiple agencies
-5. Public alert dissemination with safety instructions
+CrisisMind AI is designed as a **decision-support, simulation, and research prototype**. It is not an independently authorized emergency dispatch authority. All AI-generated survival estimates, risk scores, evacuation routes, and resource allocations must be validated by authorized human incident commanders before operational deployment.
 
 ---
 
-## Future Enhancements
+## 📜 License
 
-- **AR/VR Integration**: Immersive situational awareness for responders
-- **5G Edge Computing**: Ultra-low latency for time-critical decisions
-- **Federated Learning**: Privacy-preserving model training across agencies
-- **Digital Twin**: City-scale simulation for scenario planning
-- **Voice Interface**: Hands-free operation for field responders
+This project is open-source under the [MIT License](LICENSE).
 
 ---
 
-## Contributing
+## 👨‍💻 Author
 
-We welcome contributions from the community. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
----
-
-## License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## Contact
-
-For questions or support, please contact:
-- Email: support@disaster-dss.ai
-- Website: https://disaster-dss.ai
-- GitHub: https://github.com/disaster-dss
-
----
-
-## Acknowledgments
-
-This system was developed with support from:
-- Federal Emergency Management Agency (FEMA)
-- Department of Homeland Security (DHS)
-- National Guard Bureau
-- International Red Cross
-
----
-
-**Version**: 1.0.0  
-**Last Updated**: February 2026  
-**Status**: Production Ready
+**G. Venkata Ramakrishna**  
+B.Tech — Artificial Intelligence & Machine Learning  
+*Focus Areas*: Agentic AI, Multi-Agent Systems, Computer Vision, Full-Stack AI Applications

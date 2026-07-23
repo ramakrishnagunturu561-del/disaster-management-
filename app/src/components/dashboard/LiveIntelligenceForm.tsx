@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, MapPin, FileText, Upload, Shield, Play, RefreshCw, CheckCircle2, AlertTriangle, Layers } from 'lucide-react';
+import { Activity, MapPin, FileText, Play, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

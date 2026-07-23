@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, CheckCircle2, XCircle, Edit3, AlertOctagon, HelpCircle, FileText, Info, AlertTriangle, Cpu, RefreshCw, Eye } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, XCircle, Edit3, AlertOctagon, FileText, AlertTriangle, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +30,6 @@ export const DecisionApprovalCenter: React.FC<DecisionApprovalCenterProps> = ({
   const criticResult = agentState?.critic_result as Record<string, unknown> | undefined;
   const approvalStatus = (agentState?.approval_status as string) || 'PROPOSED';
   const decisionVersion = (agentState?.decision_version as number) || 1;
-  const decisionHistory = (agentState?.decision_history as Record<string, unknown>[]) || [];
   const actionItems = (responsePlan?.priority_action_items as Record<string, unknown>[]) || [];
   const unresolvedViolations = (agentState?.unresolved_violations as Record<string, unknown>[]) || [];
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Play, CheckCircle2, AlertTriangle, Clock, RefreshCw, Cpu, ShieldCheck, ArrowRight, Activity, FileText, Database } from 'lucide-react';
+import { Bot, Play, CheckCircle2, AlertTriangle, Clock, RefreshCw, Cpu, ShieldCheck, ArrowRight, Activity, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,6 @@ export const AgentOperationsPanel: React.FC<AgentOperationsPanelProps> = ({
   const currentAgent = (agentState?.current_agent as string) || 'INCIDENT_COMMANDER';
   const replanCount = (agentState?.replan_count as number) || 0;
   const workflowStatus = (agentState?.workflow_status as string) || 'INITIALIZED';
-  const criticResult = agentState?.critic_result as Record<string, unknown> | undefined;
   const decisionVersion = (agentState?.decision_version as number) || 1;
 
   const agentsList = [

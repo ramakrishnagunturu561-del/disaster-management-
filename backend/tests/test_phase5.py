@@ -8,10 +8,12 @@ os.environ["SKIP_TRANSFORMER_DOWNLOAD"] = "1"
 # Add backend directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import pytest
 from app.main import app, active_crisis_states
 from httpx import AsyncClient, ASGITransport
 
 
+@pytest.mark.asyncio
 async def test_system_mode_endpoint():
     """1. Test system mode status endpoint."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
@@ -24,6 +26,7 @@ async def test_system_mode_endpoint():
         print("  --> PASS: System Mode Endpoint")
 
 
+@pytest.mark.asyncio
 async def test_live_incident_analysis():
     """2. Test live incident analysis execution for custom user real coordinates."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:

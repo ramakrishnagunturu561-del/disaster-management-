@@ -50,7 +50,13 @@ async def run_all_tests():
     print("[TEST 4/5] Testing Critic Safety Agent PASS / FAIL Detection...")
     critic = CriticSafetyAgent()
     # Test pass case
-    state4_pass = CrisisState(incident_id="t4", incident_type="flood", available_resources={"rescue_teams": 10}, resource_plan={"initial_inventory": {"rescue_teams": 10}, "total_allocated": {"rescue_teams": 5}})
+    state4_pass = CrisisState(
+        incident_id="t4",
+        incident_type="flood",
+        available_resources={"rescue_teams": 10},
+        resource_plan={"initial_inventory": {"rescue_teams": 10}, "total_allocated": {"rescue_teams": 5}},
+        weather_intelligence={"status": "OK", "timestamp": "2026-07-23T10:00:00"}
+    )
     res4_pass = await critic.run(state4_pass)
     assert res4_pass.critic_result.passed is True, "Critic failed valid plan!"
 
@@ -65,7 +71,7 @@ async def run_all_tests():
     workflow = CrisisMindWorkflow()
     state5 = CrisisState(incident_id="vijayawada-demo", incident_type="flood", title="Vijayawada Flood Emergency")
     final_state = await workflow.execute(state5)
-    assert final_state.workflow_status in ["COMPLETED", "NEEDS_HUMAN_APPROVAL"], f"Unexpected status {final_state.workflow_status}"
+    assert final_state.workflow_status in ["COMPLETED", "NEEDS_HUMAN_APPROVAL", "AWAITING_HUMAN_APPROVAL"], f"Unexpected status {final_state.workflow_status}"
     assert len(final_state.agent_history) >= 10, "Execution steps incomplete"
     print(f"  --> PASS: Multi-Agent Workflow Executed {len(final_state.agent_history)} steps. Final Workflow Status: {final_state.workflow_status}.")
 

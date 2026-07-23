@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, CheckCircle2, AlertTriangle, ShieldCheck, Database, Layers } from 'lucide-react';
+import { HelpCircle, CheckCircle2, AlertTriangle, Database, Layers } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 

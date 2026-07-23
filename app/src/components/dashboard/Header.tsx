@@ -10,15 +10,6 @@ interface HeaderProps {
 }
 
 export function Header({ incident, isSimulating, onToggleSimulation }: HeaderProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-red-500 animate-pulse';
-      case 'contained': return 'bg-yellow-500';
-      case 'resolved': return 'bg-green-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
   const formatDuration = (startDate: Date) => {
     const diff = Date.now() - startDate.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));

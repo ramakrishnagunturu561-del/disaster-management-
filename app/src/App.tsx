@@ -26,6 +26,7 @@ import { SocialMediaPanel } from '@/components/dashboard/SocialMediaPanel';
 import { DecisionApprovalCenter } from '@/components/dashboard/DecisionApprovalCenter';
 import { ExplainableAIPanel } from '@/components/dashboard/ExplainableAIPanel';
 import { LiveIntelligenceForm } from '@/components/dashboard/LiveIntelligenceForm';
+import { AgentOperationsPanel } from '@/components/dashboard/AgentOperationsPanel';
 import { api, WebSocketClient } from '@/services/api';
 import './App.css';
 
@@ -128,7 +129,7 @@ function App() {
   ) => {
     try {
       const incId = incident?.id || 'inc-vijayawada-01';
-      const res = await api.approvePlan(incId, action, approver, role, comments, overrideReason);
+      await api.approvePlan(incId, action, approver, role, comments, overrideReason);
       const freshState = await api.getAgentStatus(incId);
       setAgentState(freshState);
     } catch (err) {

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { api, type AnalysisResult, type BoundingBox } from '@/services/api';
+import { api, type BoundingBox } from '@/services/api';
 
 export interface DetectionResult {
   id: string;
@@ -35,7 +35,7 @@ export function useApiDamageDetection() {
         imageUrl,
         boundingBoxes: result.bounding_boxes || [],
         heatmapData: result.heatmap_url,
-        damageScore: result.results?.damage_score || 0,
+        damageScore: (result.results?.damage_score as number) || 0,
         confidence: result.confidence,
         explanation: result.explanation || '',
         timestamp: new Date(result.created_at),

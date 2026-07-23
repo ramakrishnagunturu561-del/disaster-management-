@@ -104,8 +104,8 @@ export function useApiDashboard() {
   useEffect(() => {
     wsClient.connect();
     
-    wsClient.onMessage((data) => {
-      if (data.type === 'update') {
+    wsClient.onMessage((data: any) => {
+      if (data?.type === 'update') {
         // Refresh data on update
         loadData();
       }
