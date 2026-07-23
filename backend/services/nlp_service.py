@@ -37,10 +37,12 @@ class NLPService:
         self.classifier = None
         self.ner_pipeline = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self._load_models()
-    
     def _load_models(self):
         """Load NLP models."""
+        if os.getenv("SKIP_TRANSFORMER_DOWNLOAD", "0") == "1":
+            print("Skipping heavy transformer downloads for fast execution mode.")
+            return
+
         try:
             # Load sentiment analysis model
             self.sentiment_analyzer = pipeline(

@@ -20,6 +20,12 @@ from services.vision_service import get_vision_service
 from services.nlp_service import get_nlp_service
 from services.risk_service import get_risk_service
 from services.recommendation_service import get_recommendation_service
+from app.graph.crisis_state import CrisisState
+from app.graph.crisis_graph import get_crisis_workflow
+from app.llm.provider import get_llm_provider
+
+# In-memory storage for active crisis states during workflow runs
+active_crisis_states: dict = {}
 
 settings = get_settings()
 
@@ -759,6 +765,169 @@ async def get_map_data(
             for i in incidents
         ]
     }
+
+
+# ============================================================================
+# CrisisMind Multi-Agent Agentic AI Endpoints
+# ============================================================================
+
+@app.get("/api/v1/agents/health")
+async def agents_health():
+    """Health check for multi-agent platform and local LLM connectivity."""
+    llm = get_llm_provider()
+    llm_status = await llm.check_health()
+    return {
+        "status": "operational",
+        "agents": [
+            "INCIDENT_COMMANDER", "VISION_AGENT", "EMERGENCY_INTELLIGENCE_AGENT",
+            "WEATHER_AGENT", "SENSOR_AGENT", "RISK_AGENT", "RESOURCE_AGENT",
+            "ROUTE_AGENT", "RESPONSE_PLANNER", "CRITIC_AGENT", "MONITORING_AGENT"
+        ],
+        "llm": llm_status,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@app.post("/api/v1/incidents/{incident_id}/run-agent-workflow")
+async def run_agent_workflow(
+    incident_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Trigger the autonomous multi-agent CrisisMind workflow."""
+    # Find incident
+    try:
+        inc_uuid = uuid.UUID(incident_id)
+        result = await db.execute(select(models.Incident).where(models.Incident.id == inc_uuid))
+        db_inc = result.scalar_one_or_none()
+    except Exception:
+        db_inc = None
+
+    inc_type = db_inc.type.value if db_inc and hasattr(db_inc.type, 'value') else "flood"
+    inc_title = db_inc.title if db_inc else "Vijayawada Urban Flood Emergency"
+
+    # Initialize CrisisState
+    state = CrisisState(
+        incident_id=incident_id,
+        incident_type=inc_type,
+        title=inc_title,
+        location={"latitude": db_inc.latitude if db_inc else 16.5062, "longitude": db_inc.longitude if db_inc else 80.6480},
+        emergency_text_reports=[
+            {"text": "Severe flooding reported near Downtown. 3 residents trapped in residential ground floor.", "source": "911_call"},
+            {"text": "Bridge Structural Damage reported on Highway 16 near Industrial corridor.", "source": "field_report"}
+        ],
+        sensor_readings=[
+            {"sensor_id": "SENS-WATER-01", "sensor_type": "water_level", "value": 4.8, "is_anomaly": True, "anomaly_score": 0.9},
+            {"sensor_id": "SENS-TEMP-02", "sensor_type": "temperature", "value": 31.5, "is_anomaly": False, "anomaly_score": 0.1}
+        ]
+    )
+
+    workflow = get_crisis_workflow()
+    final_state = await workflow.execute(state)
+
+    # Save state in memory
+    active_crisis_states[incident_id] = final_state
+
+    # Broadcast update via WebSocket
+    await manager.broadcast({
+        "type": "agent_workflow_complete",
+        "incident_id": incident_id,
+        "workflow_status": final_state.workflow_status,
+        "replan_count": final_state.replan_count,
+        "current_agent": final_state.current_agent,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
+    return final_state.model_dump()
+
+
+@app.get("/api/v1/incidents/{incident_id}/agent-status")
+async def get_agent_status(incident_id: str):
+    """Retrieve active agent state and trace logs for an incident."""
+    if incident_id in active_crisis_states:
+        return active_crisis_states[incident_id].model_dump()
+    
+    # Return initial default state if not yet triggered
+    state = CrisisState(incident_id=incident_id, incident_type="flood", title="Active Emergency")
+    return state.model_dump()
+
+
+@app.post("/api/v1/incidents/{incident_id}/approve")
+async def approve_response_plan(incident_id: str, approved_by: str = Query("Incident Commander")):
+    """Commander approval of the proposed response plan."""
+    if incident_id not in active_crisis_states:
+        raise HTTPException(status_code=404, detail="No active plan found for this incident. Run agent workflow first.")
+
+    state: CrisisState = active_crisis_states[incident_id]
+    state.approval_status = "APPROVED"
+    state.execution_status = "SIMULATED"
+    state.workflow_status = "COMPLETED"
+
+    state.record_step(
+        agent="HUMAN_COMMANDER",
+        action="APPROVE_PLAN",
+        status="COMPLETED",
+        summary=f"Plan officially APPROVED by {approved_by}. Tactical execution initiated (Simulated Mode).",
+        confidence=1.0
+    )
+
+    await manager.broadcast({
+        "type": "plan_approved",
+        "incident_id": incident_id,
+        "approved_by": approved_by,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
+    return {
+        "status": "APPROVED",
+        "incident_id": incident_id,
+        "approved_by": approved_by,
+        "execution_mode": "SIMULATED",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@app.post("/api/v1/incidents/{incident_id}/reject")
+async def reject_response_plan(incident_id: str, reason: str = Query("Commander requested revision")):
+    """Commander rejection of response plan."""
+    if incident_id not in active_crisis_states:
+        raise HTTPException(status_code=404, detail="No active plan found for this incident.")
+
+    state: CrisisState = active_crisis_states[incident_id]
+    state.approval_status = "REJECTED"
+    state.workflow_status = "REJECTED"
+
+    state.record_step(
+        agent="HUMAN_COMMANDER",
+        action="REJECT_PLAN",
+        status="FAILED",
+        summary=f"Plan REJECTED by Incident Commander. Reason: {reason}",
+        confidence=1.0,
+        errors=[reason]
+    )
+
+    return {"status": "REJECTED", "incident_id": incident_id, "reason": reason}
+
+
+@app.post("/api/v1/incidents/{incident_id}/modify")
+async def modify_response_plan(incident_id: str, modifications: dict):
+    """Commander modifications to response plan."""
+    if incident_id not in active_crisis_states:
+        raise HTTPException(status_code=404, detail="No active plan found for this incident.")
+
+    state: CrisisState = active_crisis_states[incident_id]
+    state.approval_status = "MODIFIED"
+    if state.response_plan:
+        state.response_plan["commander_modifications"] = modifications
+
+    state.record_step(
+        agent="HUMAN_COMMANDER",
+        action="MODIFY_PLAN",
+        status="COMPLETED",
+        summary=f"Plan MODIFIED by Incident Commander with {len(modifications)} adjustments.",
+        confidence=1.0
+    )
+
+    return {"status": "MODIFIED", "incident_id": incident_id, "modifications": modifications}
 
 
 # ============================================================================

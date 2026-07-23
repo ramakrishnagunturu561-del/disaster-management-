@@ -246,6 +246,40 @@ class ApiClient {
     const params = incidentId ? `?incident_id=${incidentId}` : '';
     return this.fetch(`/dashboard/map${params}`);
   }
+
+  // Agentic AI Multi-Agent Endpoints
+  async getAgentHealth(): Promise<{ status: string; agents: string[]; llm: Record<string, unknown> }> {
+    return this.fetch('/agents/health');
+  }
+
+  async runAgentWorkflow(incidentId: string): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/run-agent-workflow`, {
+      method: 'POST',
+    });
+  }
+
+  async getAgentStatus(incidentId: string): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/agent-status`);
+  }
+
+  async approvePlan(incidentId: string, approvedBy: string = 'Incident Commander'): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/approve?approved_by=${encodeURIComponent(approvedBy)}`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectPlan(incidentId: string, reason: string = 'Revision requested'): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/reject?reason=${encodeURIComponent(reason)}`, {
+      method: 'POST',
+    });
+  }
+
+  async modifyPlan(incidentId: string, modifications: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/modify`, {
+      method: 'POST',
+      body: JSON.stringify(modifications),
+    });
+  }
 }
 
 // Export singleton instance

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { 
   LayoutDashboard, Map, BarChart3, Activity, 
-  Settings, HelpCircle, Menu, X, Shield, Satellite, Radio, AlertTriangle
+  Settings, HelpCircle, Menu, X, Shield, Satellite, Radio, AlertTriangle,
+  Bot, ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -22,14 +23,21 @@ import { EmergencyTimeline } from '@/components/dashboard/EmergencyTimeline';
 import { DamageDetectionPanel } from '@/components/dashboard/DamageDetectionPanel';
 import { SensorDataPanel } from '@/components/dashboard/SensorDataPanel';
 import { SocialMediaPanel } from '@/components/dashboard/SocialMediaPanel';
+import { AgentOperationsPanel } from '@/components/dashboard/AgentOperationsPanel';
+import { DecisionApprovalCenter } from '@/components/dashboard/DecisionApprovalCenter';
+import { api } from '@/services/api';
 import './App.css';
 
-type ViewType = 'dashboard' | 'map' | 'analytics' | 'livefeed';
+type ViewType = 'dashboard' | 'agents' | 'approval' | 'map' | 'analytics' | 'livefeed';
 
 function App() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+
+  // Multi-Agent State
+  const [agentState, setAgentState] = useState<Record<string, unknown> | null>(null);
+  const [isAgentRunning, setIsAgentRunning] = useState(false);
   
   const {
     zones,
@@ -63,6 +71,55 @@ function App() {
     }
   };
 
+  const handleRunAgentWorkflow = async () => {
+    setIsAgentRunning(true);
+    try {
+      const incId = incident?.id || 'inc-vijayawada-01';
+      const stateData = await api.runAgentWorkflow(incId);
+      setAgentState(stateData);
+    } catch (err) {
+      console.error('Workflow trigger failed:', err);
+    } finally {
+      setIsAgentRunning(false);
+    }
+  };
+
+  const handleApprovePlan = async () => {
+    try {
+      const incId = incident?.id || 'inc-vijayawada-01';
+      await api.approvePlan(incId);
+      if (agentState) {
+        setAgentState({ ...agentState, approval_status: 'APPROVED', execution_status: 'SIMULATED' });
+      }
+    } catch (err) {
+      console.error('Approval failed:', err);
+    }
+  };
+
+  const handleRejectPlan = async (reason: string) => {
+    try {
+      const incId = incident?.id || 'inc-vijayawada-01';
+      await api.rejectPlan(incId, reason);
+      if (agentState) {
+        setAgentState({ ...agentState, approval_status: 'REJECTED' });
+      }
+    } catch (err) {
+      console.error('Rejection failed:', err);
+    }
+  };
+
+  const handleModifyPlan = async (mods: Record<string, unknown>) => {
+    try {
+      const incId = incident?.id || 'inc-vijayawada-01';
+      await api.modifyPlan(incId, mods);
+      if (agentState) {
+        setAgentState({ ...agentState, approval_status: 'MODIFIED' });
+      }
+    } catch (err) {
+      console.error('Modification failed:', err);
+    }
+  };
+
   // Analytics data
   const zoneRiskData = zones.map(z => ({
     name: z.name,
@@ -93,38 +150,62 @@ function App() {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Shield className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-bold text-foreground">DSS Command</span>
+          <div>
+            <span className="font-bold text-foreground block leading-none text-sm">CrisisMind AI</span>
+            <span className="text-[10px] text-muted-foreground font-mono">Agentic DSS</span>
+          </div>
         </div>
       </div>
       
       <nav className="flex-1 p-4 space-y-2">
         <Button 
           variant={currentView === 'dashboard' ? 'default' : 'ghost'} 
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 text-xs font-semibold"
           onClick={() => setCurrentView('dashboard')}
         >
           <LayoutDashboard className="w-4 h-4" />
-          Dashboard
+          Command Center
         </Button>
+
+        <Button 
+          variant={currentView === 'agents' ? 'default' : 'ghost'} 
+          className="w-full justify-start gap-2 text-xs font-semibold"
+          onClick={() => setCurrentView('agents')}
+        >
+          <Bot className="w-4 h-4 text-purple-400" />
+          Agent Operations
+        </Button>
+
+        <Button 
+          variant={currentView === 'approval' ? 'default' : 'ghost'} 
+          className="w-full justify-start gap-2 text-xs font-semibold"
+          onClick={() => setCurrentView('approval')}
+        >
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          Decision Approval
+        </Button>
+
         <Button 
           variant={currentView === 'map' ? 'default' : 'ghost'} 
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 text-xs font-semibold"
           onClick={() => setCurrentView('map')}
         >
           <Map className="w-4 h-4" />
-          Map View
+          Interactive Map
         </Button>
+
         <Button 
           variant={currentView === 'analytics' ? 'default' : 'ghost'} 
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 text-xs font-semibold"
           onClick={() => setCurrentView('analytics')}
         >
           <BarChart3 className="w-4 h-4" />
           Analytics
         </Button>
+
         <Button 
           variant={currentView === 'livefeed' ? 'default' : 'ghost'} 
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 text-xs font-semibold"
           onClick={() => setCurrentView('livefeed')}
         >
           <Activity className="w-4 h-4" />
@@ -716,6 +797,21 @@ function App() {
         {/* Content Area */}
         <div className="flex-1 p-4 overflow-auto">
           {currentView === 'dashboard' && <DashboardView />}
+          {currentView === 'agents' && (
+            <AgentOperationsPanel 
+              agentState={agentState} 
+              isRunning={isAgentRunning} 
+              onRunWorkflow={handleRunAgentWorkflow} 
+            />
+          )}
+          {currentView === 'approval' && (
+            <DecisionApprovalCenter 
+              agentState={agentState} 
+              onApprove={handleApprovePlan} 
+              onReject={handleRejectPlan} 
+              onModify={handleModifyPlan} 
+            />
+          )}
           {currentView === 'map' && <MapView />}
           {currentView === 'analytics' && <AnalyticsView />}
           {currentView === 'livefeed' && <LiveFeedView />}

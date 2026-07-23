@@ -295,3 +295,60 @@ class SocialMediaReport(Base):
         Index('idx_social_urgent', 'is_urgent'),
         Index('idx_social_sentiment', 'sentiment'),
     )
+
+
+class WorkflowRun(Base):
+    """Execution state of a multi-agent CrisisMind graph run."""
+    __tablename__ = "workflow_runs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id = Column(UUID(as_uuid=True), ForeignKey("incidents.id"), nullable=True)
+    status = Column(String(50), default="RUNNING")  # RUNNING, COMPLETED, FAILED, NEEDS_APPROVAL
+    current_agent = Column(String(100), default="INCIDENT_COMMANDER")
+    replan_count = Column(Integer, default=0)
+    state_data = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AgentExecution(Base):
+    """Audit log for individual agent steps."""
+    __tablename__ = "agent_executions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_run_id = Column(UUID(as_uuid=True), ForeignKey("workflow_runs.id"), nullable=True)
+    agent_name = Column(String(100), nullable=False)
+    action = Column(String(100), nullable=False)
+    status = Column(String(50), nullable=False)  # STARTED, COMPLETED, FAILED, SKIPPED
+    summary = Column(Text, nullable=True)
+    confidence = Column(Float, default=0.0)
+    errors = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+
+class DecisionApproval(Base):
+    """Human-in-the-loop commander approval audit record."""
+    __tablename__ = "decision_approvals"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_run_id = Column(UUID(as_uuid=True), ForeignKey("workflow_runs.id"), nullable=True)
+    incident_id = Column(UUID(as_uuid=True), ForeignKey("incidents.id"), nullable=True)
+    approval_status = Column(String(50), nullable=False)  # PROPOSED, APPROVED, MODIFIED, REJECTED
+    approved_by = Column(String(100), nullable=True)
+    modifications = Column(JSON, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+
+class AuditLog(Base):
+    """System-wide security and operational audit trail."""
+    __tablename__ = "audit_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(String(100), nullable=True)
+    action = Column(String(100), nullable=False)
+    resource_type = Column(String(50), nullable=False)
+    resource_id = Column(String(100), nullable=True)
+    details = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
