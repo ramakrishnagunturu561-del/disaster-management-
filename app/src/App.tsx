@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Map, BarChart3, Activity, 
   Settings, HelpCircle, Menu, X, Shield, Satellite, Radio, AlertTriangle,
-  Bot, ShieldCheck
+  Bot, ShieldCheck, HelpCircle as HelpIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -25,7 +25,8 @@ import { SensorDataPanel } from '@/components/dashboard/SensorDataPanel';
 import { SocialMediaPanel } from '@/components/dashboard/SocialMediaPanel';
 import { AgentOperationsPanel } from '@/components/dashboard/AgentOperationsPanel';
 import { DecisionApprovalCenter } from '@/components/dashboard/DecisionApprovalCenter';
-import { api } from '@/services/api';
+import { ExplainableAIPanel } from '@/components/dashboard/ExplainableAIPanel';
+import { api, WebSocketClient } from '@/services/api';
 import './App.css';
 
 type ViewType = 'dashboard' | 'agents' | 'approval' | 'map' | 'analytics' | 'livefeed';
@@ -71,6 +72,25 @@ function App() {
     }
   };
 
+  // Real-time WebSocket Workflow Listener
+  useEffect(() => {
+    const wsClient = new WebSocketClient();
+    wsClient.connect();
+    wsClient.onMessage(async (msgData: unknown) => {
+      const data = msgData as Record<string, unknown>;
+      if (data?.type === 'agent_workflow_complete' || data?.type === 'plan_approved') {
+        const incId = incident?.id || 'inc-vijayawada-01';
+        try {
+          const freshState = await api.getAgentStatus(incId);
+          setAgentState(freshState);
+        } catch (e) {
+          console.error('Failed to sync agent state over WebSocket:', e);
+        }
+      }
+    });
+    return () => wsClient.disconnect();
+  }, [incident?.id]);
+
   const handleRunAgentWorkflow = async () => {
     setIsAgentRunning(true);
     try {
@@ -84,13 +104,18 @@ function App() {
     }
   };
 
-  const handleApprovePlan = async () => {
+  const handleApprovePlan = async (
+    action: string = 'APPROVE',
+    approver: string = 'Incident Commander',
+    role: string = 'Commander',
+    comments?: string,
+    overrideReason?: string
+  ) => {
     try {
       const incId = incident?.id || 'inc-vijayawada-01';
-      await api.approvePlan(incId);
-      if (agentState) {
-        setAgentState({ ...agentState, approval_status: 'APPROVED', execution_status: 'SIMULATED' });
-      }
+      const res = await api.approvePlan(incId, action, approver, role, comments, overrideReason);
+      const freshState = await api.getAgentStatus(incId);
+      setAgentState(freshState);
     } catch (err) {
       console.error('Approval failed:', err);
     }
@@ -100,9 +125,8 @@ function App() {
     try {
       const incId = incident?.id || 'inc-vijayawada-01';
       await api.rejectPlan(incId, reason);
-      if (agentState) {
-        setAgentState({ ...agentState, approval_status: 'REJECTED' });
-      }
+      const freshState = await api.getAgentStatus(incId);
+      setAgentState(freshState);
     } catch (err) {
       console.error('Rejection failed:', err);
     }
@@ -112,9 +136,8 @@ function App() {
     try {
       const incId = incident?.id || 'inc-vijayawada-01';
       await api.modifyPlan(incId, mods);
-      if (agentState) {
-        setAgentState({ ...agentState, approval_status: 'MODIFIED' });
-      }
+      const freshState = await api.getAgentStatus(incId);
+      setAgentState(freshState);
     } catch (err) {
       console.error('Modification failed:', err);
     }
@@ -145,7 +168,7 @@ function App() {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border space-y-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Shield className="w-5 h-5 text-primary-foreground" />
@@ -155,6 +178,15 @@ function App() {
             <span className="text-[10px] text-muted-foreground font-mono">Agentic DSS</span>
           </div>
         </div>
+        <Button 
+          size="sm" 
+          onClick={handleRunAgentWorkflow}
+          disabled={isAgentRunning}
+          className="w-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-bold gap-1 py-1"
+        >
+          <Bot className="w-3.5 h-3.5" />
+          LOAD VIJAYAWADA DEMO
+        </Button>
       </div>
       
       <nav className="flex-1 p-4 space-y-2">
@@ -183,6 +215,15 @@ function App() {
         >
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           Decision Approval
+        </Button>
+
+        <Button 
+          variant={currentView === 'xai' ? 'default' : 'ghost'} 
+          className="w-full justify-start gap-2 text-xs font-semibold"
+          onClick={() => setCurrentView('xai')}
+        >
+          <HelpIcon className="w-4 h-4 text-cyan-400" />
+          Explainable AI (XAI)
         </Button>
 
         <Button 
@@ -812,6 +853,7 @@ function App() {
               onModify={handleModifyPlan} 
             />
           )}
+          {currentView === 'xai' && <ExplainableAIPanel agentState={agentState} />}
           {currentView === 'map' && <MapView />}
           {currentView === 'analytics' && <AnalyticsView />}
           {currentView === 'livefeed' && <LiveFeedView />}

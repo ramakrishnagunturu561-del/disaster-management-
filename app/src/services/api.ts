@@ -262,14 +262,34 @@ class ApiClient {
     return this.fetch(`/incidents/${incidentId}/agent-status`);
   }
 
-  async approvePlan(incidentId: string, approvedBy: string = 'Incident Commander'): Promise<Record<string, unknown>> {
-    return this.fetch(`/incidents/${incidentId}/approve?approved_by=${encodeURIComponent(approvedBy)}`, {
-      method: 'POST',
-    });
+  async getCriticResult(incidentId: string): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/critic-result`);
   }
 
-  async rejectPlan(incidentId: string, reason: string = 'Revision requested'): Promise<Record<string, unknown>> {
-    return this.fetch(`/incidents/${incidentId}/reject?reason=${encodeURIComponent(reason)}`, {
+  async getDecisionPlan(incidentId: string): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/decision-plan`);
+  }
+
+  async getAuditLog(incidentId: string): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/audit-log`);
+  }
+
+  async approvePlan(
+    incidentId: string,
+    action: string = 'APPROVE',
+    approver: string = 'Incident Commander',
+    role: string = 'Commander',
+    comments?: string,
+    overrideReason?: string
+  ): Promise<Record<string, unknown>> {
+    let url = `/incidents/${incidentId}/approve?action=${encodeURIComponent(action)}&approver=${encodeURIComponent(approver)}&role=${encodeURIComponent(role)}`;
+    if (comments) url += `&comments=${encodeURIComponent(comments)}`;
+    if (overrideReason) url += `&override_reason=${encodeURIComponent(overrideReason)}`;
+    return this.fetch(url, { method: 'POST' });
+  }
+
+  async rejectPlan(incidentId: string, reason: string = 'Revision requested', approver: string = 'Incident Commander'): Promise<Record<string, unknown>> {
+    return this.fetch(`/incidents/${incidentId}/reject?reason=${encodeURIComponent(reason)}&approver=${encodeURIComponent(approver)}`, {
       method: 'POST',
     });
   }
@@ -285,6 +305,15 @@ class ApiClient {
 // Export singleton instance
 export const api = new ApiClient(API_BASE_URL);
 
+// Derive WebSocket URL dynamically from API_BASE_URL or window location
+const getWebSocketUrl = (): string => {
+  const envUrl = import.meta.env.VITE_WS_URL;
+  if (envUrl) return envUrl;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host || 'localhost:8000';
+  return `${protocol}//${host.split(':')[0]}:8000/ws`;
+};
+
 // WebSocket client
 export class WebSocketClient {
   private ws: WebSocket | null = null;
@@ -292,7 +321,7 @@ export class WebSocketClient {
   private reconnectInterval: number = 5000;
   private messageHandlers: ((data: unknown) => void)[] = [];
 
-  constructor(url: string = 'ws://localhost:8000/ws') {
+  constructor(url: string = getWebSocketUrl()) {
     this.url = url;
   }
 

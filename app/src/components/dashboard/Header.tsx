@@ -36,33 +36,25 @@ export function Header({ incident, isSimulating, onToggleSimulation }: HeaderPro
               <Shield className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">
-                DISASTER DSS
+              <h1 className="text-xl font-bold text-foreground tracking-wide">
+                CRISISMIND AI
               </h1>
-              <p className="text-xs text-muted-foreground">
-                AI-Driven Decision Support System
+              <p className="text-[11px] text-muted-foreground font-medium">
+                Agentic Emergency Operations Command Center
               </p>
             </div>
           </div>
           
           <div className="h-8 w-px bg-border mx-2" />
           
-          {/* Incident Info */}
-          <div className="flex items-center gap-3">
-            <Badge 
-              variant="outline" 
-              className={`${getStatusColor(incident.status)} text-white border-0`}
-            >
-              {incident.status.toUpperCase()}
+          {/* System Mode & Incident Info */}
+          <div className="flex items-center gap-2">
+            <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs font-mono">
+              SIMULATION MODE
             </Badge>
-            <div>
-              <span className="text-sm font-medium text-foreground">
-                {incident.type.toUpperCase()}
-              </span>
-              <span className="text-xs text-muted-foreground ml-2">
-                Severity: {incident.severity}/10
-              </span>
-            </div>
+            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs font-mono">
+              SYSTEM: OPERATIONAL
+            </Badge>
           </div>
         </div>
 
