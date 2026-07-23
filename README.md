@@ -1,232 +1,210 @@
-# CrisisMind AI
+# 🚨 CrisisMind AI: Agentic Disaster Intelligence & Emergency Decision Support System
 
-### Agentic Disaster Intelligence & Emergency Decision Support System
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/Frontend-React%2018-61DAFB?style=flat&logo=react)](https://react.dev/)
+[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-FF6F00?style=flat)](https://langchain.com/)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat&logo=python)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **From fragmented crisis data to coordinated, explainable action.**
+> **Transforming fragmented emergency data into explainable, safety-validated, and coordinated disaster response plans.**
 
-CrisisMind AI is an agentic AI-powered disaster intelligence and emergency decision-support platform designed to transform fragmented crisis information into coordinated, explainable, and safety-validated response plans.
-
-The platform combines a **multi-agent LangGraph architecture**, computer vision, NLP, live weather intelligence, IoT sensor analysis, risk assessment, resource allocation, evacuation planning, safety validation, and human-in-the-loop decision governance.
-
-CrisisMind AI supports both:
-- **Simulation Mode** for controlled disaster scenarios and demonstrations
-- **Live Intelligence Mode** for real-world data-driven crisis analysis
+CrisisMind AI is an advanced multi-agent disaster intelligence and emergency decision support system. Powered by **LangGraph**, **YOLOv8**, **BERT/Transformers**, **OpenCV**, and **FastAPI**, it continuously ingests real-time sensor streams, satellite/drone imagery, social/emergency reports, and weather telemetry to synthesize actionable evacuation and resource allocation strategies.
 
 ---
 
-## 🚨 Problem Statement
+## 📌 Key Capabilities
 
-During floods, earthquakes, fires, cyclones, and other large-scale emergencies, critical information arrives from multiple disconnected sources:
-
-- Drone and satellite imagery
-- Live weather services
-- IoT sensors
-- Emergency reports & call logs
-- Field personnel telemetry
-- Hospitals and shelters
-- Resource inventories
-- Road and infrastructure status
-
-Emergency teams must rapidly answer critical questions:
-- Which areas are most critical?
-- Where are people most at risk?
-- Which evacuation routes are safe?
-- Which shelters still have capacity?
-- How should limited rescue resources be allocated?
-- Is the proposed response plan actually safe and feasible?
-
-CrisisMind AI addresses this problem using a coordinated **multi-agent AI system**.
+- **🤖 Multi-Agent Orchestration**: Autonomous specialized agents (Supervisor, Vision, Emergency NLP, Weather, IoT Sensors, Risk Assessment, Resource Allocator, Evacuation Routing, and Safety Critic).
+- **👁️ Computer Vision Damage Detection**: Real-time object and flood/structural damage recognition from aerial imagery using YOLOv8.
+- **📄 Emergency Report NLP Analysis**: DistilBERT/BERT NER entity and urgency extraction from distress signals and emergency call logs.
+- **🌤️ Live Weather & IoT Telemetry**: Integration with live meteorology APIs (Open-Meteo) and synthetic/live IoT threshold monitoring (water levels, smoke, gas, seismic activity).
+- **🛡️ Self-Correction & Replanning**: Iterative safety loop where the **Safety Critic Agent** validates resource limits and route hazards before approving plans.
+- **👤 Human-in-the-Loop Governance**: Multi-stage approval framework (`PROPOSED` ➔ `AWAITING_APPROVAL` ➔ `APPROVED` / `MODIFIED` / `REJECTED`).
+- **💡 Explainable AI (XAI) & Data Provenance**: Complete tracking of data origins (`REAL`, `USER_PROVIDED`, `SIMULATION`, `DERIVED`) and step-by-step decision justification.
 
 ---
 
 ## 🏗 System Architecture
 
 ```text
-                    CRISISMIND AI
-                         |
-              OPERATIONAL MODE SELECTOR
-                         |
-          +--------------+--------------+
-          |                             |
-          v                             v
-   SIMULATION MODE              LIVE INTELLIGENCE MODE
-          |                             |
- Vijayawada Scenario             Real Location
- Simulated Sensors               Live Weather
- Predefined Resources            Uploaded Images
- Self-Correction Demo            Emergency Reports
-          |                      IoT / Resource Data
-          +-------------+---------------+
-                        |
-                        v
-               SUPERVISOR AGENT
-                        |
-            +-----------+-----------+
-            |           |           |
-            v           v           v
-        VISION      EMERGENCY    WEATHER
-        AGENT       INTELLIGENCE  AGENT
-            |           |           |
-            +-----------+-----------+
-                        |
-                  SENSOR AGENT
-                        |
-                        v
-                 RISK ASSESSMENT
-                        |
-             +----------+----------+
-             |                     |
-             v                     v
-       RESOURCE AGENT         ROUTE AGENT
-             |                     |
-             +----------+----------+
-                        |
-                        v
-               RESPONSE PLANNER
-                        |
-                        v
-                  SAFETY CRITIC
-                        |
-               +--------+--------+
-               |                 |
-             PASS               FAIL
-               |                 |
-               v                 v
-        HUMAN APPROVAL      TARGETED REPLAN
-               |                 |
-               +--------<--------+
-                        |
-                        v
-              FINAL RESPONSE PLAN
+                                +-----------------------------+
+                                |        CRISISMIND AI        |
+                                +--------------+--------------+
+                                               |
+                                   OPERATIONAL MODE SELECTOR
+                                               |
+                     +-------------------------+-------------------------+
+                     |                                                   |
+                     v                                                   v
+             SIMULATION MODE                                   LIVE INTELLIGENCE MODE
+        (Predefined Scenarios & Data)                   (Live Telemetry, Weather & Images)
+                     |                                                   |
+                     +-------------------------+-------------------------+
+                                               |
+                                               v
+                                     SUPERVISOR AGENT
+                                               |
+                       +-----------------------+-----------------------+
+                       |                       |                       |
+                       v                       v                       v
+                 VISION AGENT            EMERGENCY AGENT         WEATHER AGENT
+                 (YOLOv8 Aerial)           (BERT NLP)           (Open-Meteo API)
+                       |                       |                       |
+                       +-----------------------+-----------------------+
+                                               |
+                                               v
+                                          SENSOR AGENT
+                                        (IoT Monitoring)
+                                               |
+                                               v
+                                        RISK ASSESSMENT
+                                               |
+                             +-----------------+-----------------+
+                             |                                   |
+                             v                                   v
+                      RESOURCE AGENT                       ROUTE AGENT
+                    (Allocation Engine)                 (Evacuation Paths)
+                             |                                   |
+                             +-----------------+-----------------+
+                                               |
+                                               v
+                                       RESPONSE PLANNER
+                                               |
+                                               v
+                                         SAFETY CRITIC
+                                               |
+                                      +--------+--------+
+                                      |                 |
+                                    PASS               FAIL
+                                      |                 |
+                                      v                 v
+                                HUMAN APPROVAL    TARGETED REPLAN
+                                      |                 |
+                                      +--------<--------+
+                                               |
+                                               v
+                                     FINAL EXECUTABLE PLAN
 ```
 
 ---
 
-## 🤖 Multi-Agent Architecture
-
-CrisisMind AI orchestrates autonomous agents using **LangGraph StateGraph**:
-
-1. **Supervisor Agent (Incident Commander)**: Classifies incident type, evaluates available evidence, determines agent routing, and maintains shared crisis state.
-2. **Vision Intelligence Agent**: Uses YOLOv8 and OpenCV to detect damage, objects, and structural hazards from drone/satellite images.
-3. **Emergency Intelligence Agent**: Uses Transformers / DistilBERT / BERT NER to extract entities, locations, urgency indicators, and casualties from reports.
-4. **Weather Intelligence Agent**: Integrates live meteorological telemetry (precipitation, wind, flood risk) via Open-Meteo API.
-5. **Sensor Intelligence Agent**: Monitors IoT streams (water levels, smoke, temperature, gas leaks, seismic data) for threshold violations.
-6. **Risk Assessment Agent**: Calculates priority scores, threat levels, and survival-risk metrics across affected zones.
-7. **Resource Allocation Agent**: Assigns rescue teams, ambulances, boats, and drones under strict non-over-allocation constraints (`Allocated <= Available`).
-8. **Evacuation / Route Agent**: Evaluates road blockages, shelter capacities, travel distances, and safe corridors.
-9. **Response Planner Agent**: Synthesizes directives into structured operational proposals.
-10. **Safety Critic Agent**: Audits proposals against safety constraints (`RESOURCE_OVERALLOCATED`, `SHELTER_CAPACITY_EXCEEDED`, `ROUTE_BLOCKED`, `STALE_WEATHER`, `UNMET_CRITICAL_RESOURCE_NEED`).
-
----
-
-## 🔄 Self-Correction & Replanning Loop
-
-Instead of failing silently or restarting execution from scratch, CrisisMind AI runs a feedback self-correction loop:
+## 📂 Repository Structure
 
 ```text
-Plan v1 ---> Safety Critic (FAIL: SHELTER_CAPACITY_EXCEEDED)
-                 |
-                 v
-        Targeted Replanning (Route & Resource Agents)
-                 |
-                 v
-Plan v2 ---> Safety Critic (PASS) ---> Awaiting Human Approval
+disaster-management-/
+├── README.md                     # Root system documentation
+├── BACKEND_ARCHITECTURE.md       # Comprehensive backend & agent design specifications
+├── PRODUCTION_BUILD.md           # Production deployment & containerization guide
+├── yolov8n.pt                    # Pre-trained YOLOv8 computer vision model weights
+├── app/                          # Frontend React + TypeScript application
+│   ├── src/                      # Source UI components, pages, hooks, and services
+│   ├── package.json              # Frontend package dependencies & scripts
+│   ├── vite.config.ts            # Vite bundler configuration
+│   └── tailwind.config.js        # Design system & styling settings
+├── backend/                      # Backend FastAPI + LangGraph services
+│   ├── app/
+│   │   ├── main.py               # Main FastAPI application entrypoint & API routes
+│   │   ├── config.py             # Global application configuration & env loading
+│   │   ├── database.py           # Database connections & session handling
+│   │   ├── models.py             # ORM database models
+│   │   ├── schemas.py            # Pydantic schemas for data validation
+│   │   ├── agents/               # Multi-agent implementations
+│   │   ├── graph/                # LangGraph StateGraph orchestration
+│   │   └── validators/           # Safety critic and validation engines
+│   ├── tests/                    # Unit, integration, and agent verification test suite
+│   ├── requirements.txt          # Python dependencies
+│   ├── Dockerfile                # Backend container definition
+│   └── docker-compose.yml        # Multi-container service setup
+└── uploads/                      # Image and file upload storage directory
 ```
 
 ---
 
-## 👤 Human-in-the-Loop Governance
+## ⚙️ Quick Start Guide
 
-Decisions follow strict operational states:
-
-```text
-PROPOSED ---> AWAITING_HUMAN_APPROVAL ---> APPROVED / MODIFIED / REJECTED
-```
-
-- **Approve**: Authorize emergency deployment.
-- **Modify**: Issue commander-level modifications to re-evaluate state.
-- **Reject**: Reject proposed response plan with justification.
-- **Human Override**: Override unresolved warnings with explicit logged reasoning.
+### Prerequisites
+- **Node.js**: `v18.x` or higher
+- **Python**: `v3.11` or higher
+- **Git**
 
 ---
 
-## 🔍 Explainable AI & Provenance Tracking
-
-- **Explainable AI (XAI)**: Breaks down decision reasoning into **Facts**, **Derived Metrics**, **Decision Rationale**, **Assumptions**, and **Warnings**.
-- **Data Provenance**: Every output is tagged with transparent provenance categories:
-  - `REAL` (Open-Meteo Weather, Field Data)
-  - `USER_PROVIDED` (Uploaded Drone Images, Reports)
-  - `SIMULATION` (Predefined Telemetry)
-  - `DERIVED` (Risk Scores, Priorities)
-
----
-
-## 🛠 Technology Stack
-
-### Frontend (`/app`)
-- **Core**: React 18, TypeScript, Vite
-- **Styling**: Tailwind CSS, Radix UI, Lucide Icons
-- **Mapping & Charts**: Leaflet, Recharts
-
-### Backend (`/backend`)
-- **Framework**: Python 3.14+, FastAPI, Pydantic v2
-- **Agentic Orchestration**: LangGraph, LangChain Core
-- **Computer Vision & NLP**: YOLOv8, OpenCV, HuggingFace Transformers, DistilBERT
-- **Database & Services**: SQLAlchemy, AsyncPG, WebSockets, Open-Meteo API
-
----
-
-## ⚙️ Installation & Setup Guide
-
-### 1. Clone Repository
+### 1. Clone the Repository
 ```bash
-git clone <repository_url>
+git clone https://github.com/<your-username>/disaster-management.git
 cd disaster-management-
 ```
 
+---
+
 ### 2. Backend Setup
+Navigate to the `backend` directory, create a virtual environment, and install dependencies:
+
 ```bash
 cd backend
-python -m venv venv
-```
-- **Windows**: `.\venv\Scripts\Activate.ps1`
-- **Linux/Mac**: `source venv/bin/activate`
 
-Install dependencies:
-```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# Windows:
+.\venv\Scripts\Activate.ps1
+# Linux/macOS:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-Start backend API:
+Launch the FastAPI application:
 ```bash
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-- **Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### 3. Frontend Setup
-In a new terminal:
-```bash
-cd app
-npm install
-npm run dev
-```
-- **Command Center Dashboard**: [http://localhost:5173](http://localhost:5173)
+- 🌐 **Interactive API Documentation (Swagger UI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- ⚙️ **ReDoc API Spec**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 ---
 
-## 🧪 Verification & Testing
+### 3. Frontend Setup
+Open a new terminal window and navigate to the `app` directory:
 
-Run full backend unit and integration test suite:
 ```bash
-python -m pytest backend/tests/test_phase1.py backend/tests/test_phase2.py backend/tests/test_phase3.py backend/tests/test_phase5.py
+cd app
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+- 🖥️ **Command Center UI**: [http://localhost:5173](http://localhost:5173)
+
+---
+
+### 4. Running with Docker (Optional)
+To spin up all services via Docker:
+```bash
+cd backend
+docker-compose up -d --build
 ```
 
-Run standalone multi-agent verification:
+---
+
+## 🧪 Testing & Verification
+
+CrisisMind AI features comprehensive automated tests covering unit components, multi-agent workflows, and safety verification loops.
+
+### Run Backend Tests
 ```bash
+# Run pytest phase suites
+python -m pytest backend/tests/test_phase1.py backend/tests/test_phase2.py backend/tests/test_phase3.py backend/tests/test_phase5.py
+
+# Run standalone multi-agent graph verification
 python backend/tests/run_tests.py
 ```
 
-Build production frontend:
+### Build & Verify Frontend
 ```bash
 cd app
 npm run build
@@ -234,29 +212,29 @@ npm run build
 
 | Verification Suite | Test Count | Result |
 |---|---|:---:|
-| Phase 1 — Core Agentic Foundation | 10 / 10 | **PASS** |
-| Phase 2 — Operational Intelligence | 5 / 5 | **PASS** |
-| Phase 3 — Safety Critic & Self-Correction | 7 / 7 | **PASS** |
-| Phase 5 — Dual-Mode Operational Suite | 3 / 3 | **PASS** |
-| Multi-Agent Graph End-to-End Suite | 5 / 5 | **PASS** |
-| Frontend TypeScript & Vite Build | 0 Errors | **PASS** |
+| **Phase 1** — Core Agentic Foundation | 10 / 10 | **PASS** |
+| **Phase 2** — Operational Intelligence | 5 / 5 | **PASS** |
+| **Phase 3** — Safety Critic & Self-Correction | 7 / 7 | **PASS** |
+| **Phase 5** — Dual-Mode Operational Suite | 3 / 3 | **PASS** |
+| **Multi-Agent Graph End-to-End** | 5 / 5 | **PASS** |
+| **Frontend TypeScript & Build** | 0 Errors | **PASS** |
 
 ---
 
-## ⚠️ Safety & Responsible Use Disclaimer
+## ⚠️ Responsible AI & Safety Disclaimer
 
-CrisisMind AI is designed as a **decision-support, simulation, and research prototype**. It is not an independently authorized emergency dispatch authority. All AI-generated survival estimates, risk scores, evacuation routes, and resource allocations must be validated by authorized human incident commanders before operational deployment.
+CrisisMind AI is designed strictly as an **emergency decision support and simulation tool**. All AI-generated survival predictions, damage assessments, evacuation routes, and resource allocation directives **must be validated by certified human incident commanders** prior to physical deployment.
 
 ---
 
 ## 📜 License
 
-This project is open-source under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Author & Maintainers
 
 **G. Venkata Ramakrishna**  
-B.Tech — Artificial Intelligence & Machine Learning  
-*Focus Areas*: Agentic AI, Multi-Agent Systems, Computer Vision, Full-Stack AI Applications
+*B.Tech — Artificial Intelligence & Machine Learning*  
+- **Specializations**: Agentic AI Systems, Multi-Agent Orchestration, Computer Vision, Full-Stack AI Engineering.
