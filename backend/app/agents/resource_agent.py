@@ -23,10 +23,10 @@ class ResourceAllocationAgent:
         )
 
         # Baseline inventory if none in state
-        inventory = state.available_resources if state.available_resources else {
+        inventory = state.available_resources if bool(state.available_resources) else {
             "rescue_teams": 6,
-            "ambulances": 10,
-            "rescue_boats": 5,
+            "rescue_boats": 4,
+            "ambulances": 12,
             "drones": 4,
             "fire_trucks": 8
         }

@@ -1,74 +1,111 @@
-"""Critic / Safety Verification Agent."""
+"""Critic / Safety Verification Agent orchestrating deterministic validators."""
 import logging
-from typing import List
+from datetime import datetime
+from typing import Dict, Any, List
 from app.graph.crisis_state import CrisisState, CriticResult
+from app.validators.resource_validator import validate_resources
+from app.validators.shelter_validator import validate_shelters
+from app.validators.route_validator import validate_routes
+from app.validators.weather_validator import validate_weather
+from app.validators.evidence_validator import validate_evidence
+from app.validators.plan_validator import validate_plan_consistency
 
 logger = logging.getLogger(__name__)
 
 
 class CriticSafetyAgent:
-    """Mandatory Critic Agent responsible for safety verification, constraint checking, 
-    and triggering re-planning loops if invalid."""
+    """Independent Safety Critic Agent running deterministic validators against plan outputs."""
 
     def __init__(self):
         self.name = "CRITIC_AGENT"
+        self.version = "1.0.0"
 
     async def run(self, state: CrisisState) -> CrisisState:
-        """Run safety and operational sanity checks on the proposed response plan."""
+        """Run all deterministic validators against current state."""
         state.record_step(
             agent=self.name,
             action="VERIFY_SAFETY_AND_CONSTRAINTS",
             status="STARTED",
-            summary="Auditing proposed plan against safety constraints and resource capacities."
+            summary="Auditing operational response plan against deterministic safety constraints."
         )
 
-        failures: List[str] = []
+        all_violations: List[Dict[str, Any]] = []
 
-        # 1. Resource Availability Check
-        if state.resource_plan:
-            totals = state.resource_plan.get("total_allocated", {})
-            avail = state.resource_plan.get("initial_inventory", {})
-            for rtype, count in totals.items():
-                if count > avail.get(rtype, 0):
-                    failures.append(f"Resource over-allocation: Planned {count} {rtype}, but only {avail.get(rtype, 0)} available.")
+        # 1. Resource Validator
+        res_inv = state.available_resources
+        all_violations.extend(validate_resources(state.resource_plan or {}, res_inv))
 
-        # 2. Shelter Capacity Check
-        if state.evacuation_plan:
-            for zid, plan in state.evacuation_plan.items():
-                remaining_cap = plan.get("shelter_capacity_remaining", 0)
-                if remaining_cap <= 0:
-                    failures.append(f"Shelter capacity exceeded for zone {plan.get('zone_name')}.")
+        # 2. Shelter Validator
+        all_violations.extend(validate_shelters(state.evacuation_plan or {}, state.priority_zones or []))
 
-        # 3. Route Validity Check
-        if state.route_analysis:
-            blocked = state.route_analysis.get("blocked_corridors", [])
-            if state.response_plan:
-                for item in state.response_plan.get("priority_action_items", []):
-                    used_route = item.get("route")
-                    if used_route in blocked:
-                        failures.append(f"Invalid route: Plan uses blocked corridor '{used_route}' for {item.get('zone')}.")
+        # 3. Route Validator
+        all_violations.extend(validate_routes(state.route_analysis or {}, state.evacuation_plan or {}, state.response_plan or {}))
 
-        # 4. Confidence Threshold Check
-        if state.confidence_scores:
-            avg_conf = sum(state.confidence_scores.values()) / len(state.confidence_scores)
-            if avg_conf < 0.5:
-                failures.append(f"Confidence score below safety threshold ({avg_conf:.2f} < 0.50).")
+        # 4. Weather Validator
+        all_violations.extend(validate_weather(state.weather_intelligence or {}))
 
-        # 5. Simulated Re-plan Check for Demo (triggers 1 loop if forced for validation testing)
-        if state.replan_count == 0 and state.warnings and "DEMO_REPLAN_TEST" in state.warnings:
-            failures.append("Simulated safety critic alert: Initial shelter capacity constraint conflict detected in Zone A.")
+        # 5. Evidence Validator
+        all_violations.extend(validate_evidence(state.evidence or [], state.response_plan or {}))
 
-        if failures:
+        # 6. Plan Consistency Validator
+        all_violations.extend(validate_plan_consistency(state.response_plan or {}, state.priority_zones or []))
+
+        # Categorize violations by severity
+        critical_high_violations = [v for v in all_violations if v.get("severity") in ["CRITICAL", "HIGH"]]
+        warning_violations = [v for v in all_violations if v.get("severity") == "WARNING"]
+
+        # Determine target agents for re-planning based on violation codes
+        replan_targets = list(set([v.get("responsible_agent") for v in critical_high_violations if v.get("responsible_agent")]))
+
+        if critical_high_violations:
+            status = "FAIL"
             passed = False
-            state.critic_result = CriticResult(passed=False, reasons=failures, confidence=0.98)
-            state.workflow_status = "REPLANNING"
-            state.replan_count += 1
-            summary_msg = f"CRITIC FAIL ({len(failures)} safety violations). Triggering re-planning loop (Count: {state.replan_count}/{state.max_replan_limit})."
-        else:
+            score = max(0, 100 - len(critical_high_violations) * 25)
+        elif warning_violations:
+            status = "PASS_WITH_WARNINGS"
             passed = True
-            state.critic_result = CriticResult(passed=True, reasons=[], confidence=0.99)
-            state.workflow_status = "NEEDS_HUMAN_APPROVAL"
-            summary_msg = "CRITIC PASS. Operational plan verified clean. Ready for Incident Commander approval."
+            score = max(60, 100 - len(warning_violations) * 10)
+        else:
+            status = "PASS"
+            passed = True
+            score = 100
+
+        # Construct structured Critic Result
+        critic_dict = {
+            "status": status,
+            "overall_score": score,
+            "violations": critical_high_violations,
+            "warnings": [w.get("message") for w in warning_violations],
+            "validated_constraints": ["RESOURCE_LIMITS", "SHELTER_CAPACITY", "ROUTE_SAFETY", "DATA_AGE", "EVIDENCE_TRACEABILITY"],
+            "required_replan_targets": replan_targets,
+            "timestamp": datetime.utcnow().isoformat(),
+            "validator_version": self.version
+        }
+
+        reason_strings = [v.get("message", "") for v in critical_high_violations]
+
+        state.critic_result = CriticResult(
+            passed=passed,
+            reasons=reason_strings,
+            confidence=0.99,
+            timestamp=critic_dict["timestamp"]
+        )
+
+        state.unresolved_violations = all_violations
+        state.replan_targets = replan_targets
+
+        if passed:
+            state.workflow_status = "AWAITING_HUMAN_APPROVAL"
+            state.approval_status = "PROPOSED"
+            summary_msg = f"CRITIC {status} (Score: {score}/100). Plan verified clean. Awaiting Commander authorization."
+        else:
+            state.replan_count += 1
+            if state.replan_count >= state.max_replan_limit:
+                state.workflow_status = "HUMAN_REVIEW_REQUIRED"
+                state.approval_status = "HUMAN_REVIEW_REQUIRED"
+                summary_msg = f"CRITIC FAIL (Score: {score}/100). Maximum re-plan attempts reached ({state.replan_count}/{state.max_replan_limit}). Automated self-correction stopped. Human Commander review required."
+            else:
+                summary_msg = f"CRITIC FAIL (Score: {score}/100, {len(critical_high_violations)} Critical/High Violations). Targeted Re-plan required: {', '.join(replan_targets)}."
 
         state.record_step(
             agent=self.name,
@@ -76,7 +113,7 @@ class CriticSafetyAgent:
             status="COMPLETED" if passed else "FAILED",
             summary=summary_msg,
             confidence=0.99,
-            errors=failures if not passed else None
+            errors=reason_strings if not passed else None
         )
 
         return state

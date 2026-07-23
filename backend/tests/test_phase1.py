@@ -156,7 +156,7 @@ async def test_complete_phase1_graph():
         emergency_text_reports=[{"text": "Trapped people near downtown", "source": "call"}]
     )
     final_state = await workflow.execute(state)
-    assert final_state.workflow_status in ["COMPLETED", "NEEDS_HUMAN_APPROVAL"]
+    assert final_state.workflow_status in ["COMPLETED", "NEEDS_HUMAN_APPROVAL", "AWAITING_HUMAN_APPROVAL"]
     assert len(final_state.agent_history) >= 4
     assert final_state.response_plan is not None
 

@@ -107,7 +107,7 @@ async def test_real_langgraph_stategraph_pipeline():
         sensor_readings=[{"sensor_id": "WL-01", "sensor_type": "water_level", "value": 4.9}]
     )
     final_state = await workflow.execute(state)
-    assert final_state.workflow_status == "COMPLETED"
+    assert final_state.workflow_status in ["COMPLETED", "AWAITING_HUMAN_APPROVAL"]
     assert final_state.weather_intelligence is not None
     assert final_state.sensor_intelligence is not None
     assert final_state.resource_plan is not None

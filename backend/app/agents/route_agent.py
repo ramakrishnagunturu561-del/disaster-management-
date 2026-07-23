@@ -30,11 +30,16 @@ class EvacuationRouteAgent:
             blocked_routes.append("Low-lying Riverbank Road Corridor")
 
         # Evacuation routes per priority zone
-        evacuation_plan = {}
+        evacuation_plan = state.evacuation_plan.copy() if state.evacuation_plan else {}
         for zone in state.priority_zones:
-            zid = zone.get("zone_id", "zone_x")
+            zid = zone.get("zone_id") or zone.get("id") or "zone_x"
             zname = zone.get("zone_name", zid)
             category = zone.get("category", "GREEN")
+
+            # Check if state already has a pre-existing constraint for this zone
+            existing = evacuation_plan.get(zid, {})
+            if existing and ("UNAVAILABLE" in existing.get("target_shelter", "").upper() or existing.get("shelter_capacity_remaining", 0) < 0):
+                continue
 
             if category in ["RED", "BLACK", "YELLOW"]:
                 evacuation_plan[zid] = {

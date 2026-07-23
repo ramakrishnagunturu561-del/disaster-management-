@@ -50,6 +50,7 @@ class ResponsePlannerAgent:
                     "zone": zname,
                     "risk_category": category,
                     "actions": actions_list,
+                    "allocated_resources": alloc,
                     "route": primary_rt,
                     "target_shelter": routes.get("target_shelter", "Central Relief Shelter"),
                     "reasoning": f"High flood/structural risk ({zone.get('damage_severity')}% damage severity) combined with high population exposure.",

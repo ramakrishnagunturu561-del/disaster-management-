@@ -67,15 +67,22 @@ class CrisisState(BaseModel):
     assumptions: List[str] = Field(default_factory=list)
 
     # Approval & Execution Controls
-    approval_status: str = "PROPOSED"  # PROPOSED, UNDER_REVIEW, APPROVED, MODIFIED, REJECTED, EXECUTED, CANCELLED
-    execution_status: str = "PENDING"   # PENDING, SIMULATED, EXECUTED, FAILED
+    approval_status: str = "PROPOSED"  # PROPOSED, UNDER_REVIEW, APPROVED, MODIFIED, REJECTED, HUMAN_REVIEW_REQUIRED, CANCELLED
+    execution_status: str = "SIMULATION_ONLY"   # SIMULATION_ONLY (No real-world execution permitted)
+    approval_record: Optional[Dict[str, Any]] = None
+    decision_version: int = 1
+    decision_history: List[Dict[str, Any]] = Field(default_factory=list)
 
     # Workflow Orchestration Traceability
+    workflow_run_id: Optional[str] = None
     agent_history: List[AgentHistoryStep] = Field(default_factory=list)
     current_agent: str = "INCIDENT_COMMANDER"
-    workflow_status: str = "INITIALIZED"  # RUNNING, COMPLETED, FAILED, NEEDS_APPROVAL
+    workflow_status: str = "INITIALIZED"  # RUNNING, COMPLETED, FAILED, AWAITING_HUMAN_APPROVAL, HUMAN_REVIEW_REQUIRED
     replan_count: int = 0
     max_replan_limit: int = 3
+    replan_reason: Optional[str] = None
+    replan_targets: List[str] = Field(default_factory=list)
+    unresolved_violations: List[Dict[str, Any]] = Field(default_factory=list)
     is_simulation: bool = True
 
     def record_step(self, agent: str, action: str, status: str, summary: Optional[str] = None, confidence: Optional[float] = None, errors: Optional[List[str]] = None):

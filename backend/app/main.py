@@ -846,48 +846,139 @@ async def get_agent_status(incident_id: str):
     if incident_id in active_crisis_states:
         return active_crisis_states[incident_id].model_dump()
     
-    # Return initial default state if not yet triggered
     state = CrisisState(incident_id=incident_id, incident_type="flood", title="Active Emergency")
     return state.model_dump()
 
 
+@app.get("/api/v1/incidents/{incident_id}/critic-result")
+async def get_critic_result(incident_id: str):
+    """Retrieve Safety Critic validation result and violation codes."""
+    if incident_id not in active_crisis_states:
+        raise HTTPException(status_code=404, detail="No active crisis state found for this incident.")
+    
+    state: CrisisState = active_crisis_states[incident_id]
+    return {
+        "incident_id": incident_id,
+        "critic_result": state.critic_result.model_dump() if state.critic_result else None,
+        "replan_targets": state.replan_targets,
+        "unresolved_violations": state.unresolved_violations,
+        "workflow_status": state.workflow_status
+    }
+
+
+@app.get("/api/v1/incidents/{incident_id}/decision-plan")
+async def get_decision_plan(incident_id: str):
+    """Retrieve current decision plan version and history."""
+    if incident_id not in active_crisis_states:
+        raise HTTPException(status_code=404, detail="No active decision plan found for this incident.")
+    
+    state: CrisisState = active_crisis_states[incident_id]
+    return {
+        "incident_id": incident_id,
+        "decision_version": state.decision_version,
+        "response_plan": state.response_plan,
+        "approval_status": state.approval_status,
+        "approval_record": state.approval_record,
+        "decision_history": state.decision_history,
+        "is_simulation": state.is_simulation
+    }
+
+
+@app.get("/api/v1/incidents/{incident_id}/audit-log")
+async def get_audit_log(incident_id: str):
+    """Retrieve complete agent execution audit trail for governance."""
+    if incident_id not in active_crisis_states:
+        raise HTTPException(status_code=404, detail="No active audit trail found for this incident.")
+    
+    state: CrisisState = active_crisis_states[incident_id]
+    return {
+        "incident_id": incident_id,
+        "workflow_run_id": state.workflow_run_id or incident_id,
+        "agent_history": [step.model_dump() for step in state.agent_history],
+        "replan_count": state.replan_count,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
 @app.post("/api/v1/incidents/{incident_id}/approve")
-async def approve_response_plan(incident_id: str, approved_by: str = Query("Incident Commander")):
-    """Commander approval of the proposed response plan."""
+async def approve_response_plan(
+    incident_id: str,
+    action: str = Query("APPROVE"),
+    approver: str = Query("Incident Commander"),
+    role: str = Query("Commander"),
+    comments: Optional[str] = Query(None),
+    override_reason: Optional[str] = Query(None)
+):
+    """Commander approval with server-side state machine validation."""
     if incident_id not in active_crisis_states:
         raise HTTPException(status_code=404, detail="No active plan found for this incident. Run agent workflow first.")
 
     state: CrisisState = active_crisis_states[incident_id]
-    state.approval_status = "APPROVED"
-    state.execution_status = "SIMULATED"
+
+    # Server-side Validation Rule 1: REJECTED plans cannot directly become APPROVED
+    if state.approval_status == "REJECTED":
+        raise HTTPException(status_code=400, detail="Invalid State Transition: REJECTED response plan cannot be approved directly. Workflow re-execution required.")
+
+    # Server-side Validation Rule 2: Plans that failed Critic require explicit HUMAN_OVERRIDE
+    critic_passed = state.critic_result.passed if state.critic_result else False
+    if not critic_passed and action != "HUMAN_OVERRIDE":
+        raise HTTPException(
+            status_code=422,
+            detail="Safety Violation: Response plan failed Critic validation. Approval requires explicit HUMAN_OVERRIDE action with justification."
+        )
+
+    if action == "HUMAN_OVERRIDE":
+        if not override_reason:
+            raise HTTPException(status_code=400, detail="HUMAN_OVERRIDE requires an explicit override_reason justification.")
+        state.approval_status = "APPROVED_WITH_OVERRIDE"
+        state.warnings.append(f"HUMAN_OVERRIDE issued by {approver} ({role}). Reason: {override_reason}")
+    else:
+        state.approval_status = "APPROVED"
+
+    state.execution_status = "SIMULATION_ONLY"
     state.workflow_status = "COMPLETED"
+    
+    approval_record = {
+        "action": action,
+        "approver": approver,
+        "role": role,
+        "comments": comments,
+        "override_reason": override_reason,
+        "decision_version": state.decision_version,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    state.approval_record = approval_record
 
     state.record_step(
         agent="HUMAN_COMMANDER",
         action="APPROVE_PLAN",
         status="COMPLETED",
-        summary=f"Plan officially APPROVED by {approved_by}. Tactical execution initiated (Simulated Mode).",
+        summary=f"Plan v{state.decision_version} APPROVED by {approver} ({role}). Execution mode: SIMULATION_ONLY.",
         confidence=1.0
     )
 
     await manager.broadcast({
         "type": "plan_approved",
         "incident_id": incident_id,
-        "approved_by": approved_by,
+        "approver": approver,
+        "approval_record": approval_record,
         "timestamp": datetime.utcnow().isoformat()
     })
 
     return {
-        "status": "APPROVED",
+        "status": state.approval_status,
         "incident_id": incident_id,
-        "approved_by": approved_by,
-        "execution_mode": "SIMULATED",
-        "timestamp": datetime.utcnow().isoformat()
+        "approval_record": approval_record,
+        "execution_mode": "SIMULATION_ONLY"
     }
 
 
 @app.post("/api/v1/incidents/{incident_id}/reject")
-async def reject_response_plan(incident_id: str, reason: str = Query("Commander requested revision")):
+async def reject_response_plan(
+    incident_id: str,
+    reason: str = Query("Commander requested revision"),
+    approver: str = Query("Incident Commander")
+):
     """Commander rejection of response plan."""
     if incident_id not in active_crisis_states:
         raise HTTPException(status_code=404, detail="No active plan found for this incident.")
@@ -896,38 +987,71 @@ async def reject_response_plan(incident_id: str, reason: str = Query("Commander 
     state.approval_status = "REJECTED"
     state.workflow_status = "REJECTED"
 
+    rejection_record = {
+        "action": "REJECT",
+        "approver": approver,
+        "reason": reason,
+        "decision_version": state.decision_version,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    state.approval_record = rejection_record
+
     state.record_step(
         agent="HUMAN_COMMANDER",
         action="REJECT_PLAN",
         status="FAILED",
-        summary=f"Plan REJECTED by Incident Commander. Reason: {reason}",
+        summary=f"Plan v{state.decision_version} REJECTED by {approver}. Reason: {reason}",
         confidence=1.0,
         errors=[reason]
     )
 
-    return {"status": "REJECTED", "incident_id": incident_id, "reason": reason}
+    return {"status": "REJECTED", "incident_id": incident_id, "rejection_record": rejection_record}
 
 
 @app.post("/api/v1/incidents/{incident_id}/modify")
-async def modify_response_plan(incident_id: str, modifications: dict):
-    """Commander modifications to response plan."""
+async def modify_response_plan(
+    incident_id: str,
+    modifications: dict
+):
+    """Commander modifications to response plan resulting in new decision version and Critic re-validation."""
     if incident_id not in active_crisis_states:
         raise HTTPException(status_code=404, detail="No active plan found for this incident.")
 
     state: CrisisState = active_crisis_states[incident_id]
+    
+    # Store old plan in history & create new decision version
+    if state.response_plan:
+        state.decision_history.append({
+            "version": state.decision_version,
+            "response_plan": state.response_plan,
+            "critic_result": state.critic_result.model_dump() if state.critic_result else None
+        })
+        state.decision_version += 1
+
     state.approval_status = "MODIFIED"
     if state.response_plan:
         state.response_plan["commander_modifications"] = modifications
+        state.response_plan["version"] = state.decision_version
+
+    # Re-run Safety Critic Agent on modified plan
+    critic_agent = CriticSafetyAgent()
+    state = await critic_agent.run(state)
 
     state.record_step(
         agent="HUMAN_COMMANDER",
         action="MODIFY_PLAN",
         status="COMPLETED",
-        summary=f"Plan MODIFIED by Incident Commander with {len(modifications)} adjustments.",
+        summary=f"Plan MODIFIED to Decision v{state.decision_version} with {len(modifications)} adjustments. Critic re-validated: {state.critic_result.passed}.",
         confidence=1.0
     )
 
-    return {"status": "MODIFIED", "incident_id": incident_id, "modifications": modifications}
+    return {
+        "status": "MODIFIED",
+        "incident_id": incident_id,
+        "decision_version": state.decision_version,
+        "modifications": modifications,
+        "critic_result": state.critic_result.model_dump() if state.critic_result else None
+    }
 
 
 # ============================================================================
