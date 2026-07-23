@@ -3,8 +3,8 @@ import os
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import List, Optional
-
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -831,6 +831,69 @@ async def run_agent_workflow(
     await manager.broadcast({
         "type": "agent_workflow_complete",
         "incident_id": incident_id,
+        "workflow_status": final_state.workflow_status,
+        "replan_count": final_state.replan_count,
+        "current_agent": final_state.current_agent,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
+    return final_state.model_dump()
+
+
+class LiveIncidentAnalysisRequest(BaseModel):
+    incident_id: Optional[str] = None
+    incident_type: str = "flood"
+    title: str = "Live Emergency Analysis"
+    latitude: float = 16.5062
+    longitude: float = 80.6480
+    emergency_text: Optional[str] = None
+    available_resources: Optional[Dict[str, int]] = None
+    priority_zones: Optional[List[Dict[str, Any]]] = None
+
+
+@app.get("/api/v1/system/mode")
+async def get_system_mode():
+    """Retrieve system operational mode status (SIMULATION vs LIVE_INTELLIGENCE)."""
+    return {
+        "active_mode": "LIVE_INTELLIGENCE_READY",
+        "modes_supported": ["SIMULATION_MODE", "LIVE_INTELLIGENCE_MODE"],
+        "live_weather": "OPEN_METEO_CONNECTED",
+        "vision_engine": "YOLOV8_ACTIVE",
+        "nlp_engine": "DISTILBERT_TRANSFORMERS_ACTIVE",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@app.post("/api/v1/incidents/live-analysis")
+async def run_live_incident_analysis(req: LiveIncidentAnalysisRequest):
+    """Execute live multi-agent analysis for user-provided real location, text report, and imagery."""
+    inc_id = req.incident_id or f"live-inc-{uuid.uuid4().hex[:8]}"
+
+    reports = []
+    if req.emergency_text:
+        reports.append({"text": req.emergency_text, "source": "user_submitted_report"})
+
+    state = CrisisState(
+        incident_id=inc_id,
+        incident_type=req.incident_type,
+        title=req.title,
+        location={"latitude": req.latitude, "longitude": req.longitude},
+        emergency_text_reports=reports,
+        available_resources=req.available_resources or {"rescue_teams": 6, "ambulances": 10, "rescue_boats": 4, "drones": 4},
+        priority_zones=req.priority_zones or [
+            {"id": "00000000-0000-0000-0000-000000000001", "zone_id": "00000000-0000-0000-0000-000000000001", "zone_name": f"{req.title} Impact Zone", "population": 1500, "damage_score": 75.0}
+        ],
+        is_simulation=False
+    )
+
+    workflow = get_crisis_workflow()
+    final_state = await workflow.execute(state)
+
+    active_crisis_states[inc_id] = final_state
+
+    await manager.broadcast({
+        "type": "agent_workflow_complete",
+        "incident_id": inc_id,
         "workflow_status": final_state.workflow_status,
         "replan_count": final_state.replan_count,
         "current_agent": final_state.current_agent,

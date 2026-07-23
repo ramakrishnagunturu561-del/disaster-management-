@@ -23,18 +23,20 @@ import { EmergencyTimeline } from '@/components/dashboard/EmergencyTimeline';
 import { DamageDetectionPanel } from '@/components/dashboard/DamageDetectionPanel';
 import { SensorDataPanel } from '@/components/dashboard/SensorDataPanel';
 import { SocialMediaPanel } from '@/components/dashboard/SocialMediaPanel';
-import { AgentOperationsPanel } from '@/components/dashboard/AgentOperationsPanel';
 import { DecisionApprovalCenter } from '@/components/dashboard/DecisionApprovalCenter';
 import { ExplainableAIPanel } from '@/components/dashboard/ExplainableAIPanel';
+import { LiveIntelligenceForm } from '@/components/dashboard/LiveIntelligenceForm';
 import { api, WebSocketClient } from '@/services/api';
 import './App.css';
 
-type ViewType = 'dashboard' | 'agents' | 'approval' | 'map' | 'analytics' | 'livefeed';
+type ViewType = 'dashboard' | 'agents' | 'approval' | 'xai' | 'map' | 'analytics' | 'livefeed';
+type SystemModeType = 'SIMULATION' | 'LIVE_INTELLIGENCE';
 
 function App() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+  const [systemMode, setSystemMode] = useState<SystemModeType>('SIMULATION');
 
   // Multi-Agent State
   const [agentState, setAgentState] = useState<Record<string, unknown> | null>(null);
@@ -99,6 +101,19 @@ function App() {
       setAgentState(stateData);
     } catch (err) {
       console.error('Workflow trigger failed:', err);
+    } finally {
+      setIsAgentRunning(false);
+    }
+  };
+
+  const handleRunLiveAnalysis = async (payload: Record<string, unknown>) => {
+    setIsAgentRunning(true);
+    try {
+      const stateData = await api.runLiveIncidentAnalysis(payload);
+      setAgentState(stateData);
+      setCurrentView('agents');
+    } catch (err) {
+      console.error('Live analysis failed:', err);
     } finally {
       setIsAgentRunning(false);
     }
@@ -836,7 +851,37 @@ function App() {
         <ResourceStatusBar resources={resources} />
 
         {/* Content Area */}
-        <div className="flex-1 p-4 overflow-auto">
+        <div className="flex-1 p-4 overflow-auto space-y-4">
+          {/* Dual-Mode Selector Bar */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Operational Mode:</span>
+              <Button
+                size="sm"
+                variant={systemMode === 'SIMULATION' ? 'default' : 'outline'}
+                onClick={() => setSystemMode('SIMULATION')}
+                className="text-xs py-1 h-auto font-bold"
+              >
+                SIMULATION MODE
+              </Button>
+              <Button
+                size="sm"
+                variant={systemMode === 'LIVE_INTELLIGENCE' ? 'default' : 'outline'}
+                onClick={() => setSystemMode('LIVE_INTELLIGENCE')}
+                className="text-xs py-1 h-auto font-bold border-emerald-500/40 text-emerald-400"
+              >
+                LIVE INTELLIGENCE MODE
+              </Button>
+            </div>
+            <Badge variant="outline" className="text-[11px] font-mono">
+              {systemMode === 'SIMULATION' ? 'PREDEFINED FLOOD SCENARIO' : 'REAL LOCATION & METEO INGEST'}
+            </Badge>
+          </div>
+
+          {systemMode === 'LIVE_INTELLIGENCE' && (
+            <LiveIntelligenceForm onRunLiveAnalysis={handleRunLiveAnalysis} isRunning={isAgentRunning} />
+          )}
+
           {currentView === 'dashboard' && <DashboardView />}
           {currentView === 'agents' && (
             <AgentOperationsPanel 

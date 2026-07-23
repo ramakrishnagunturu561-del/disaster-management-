@@ -294,6 +294,17 @@ class ApiClient {
     });
   }
 
+  async getSystemMode(): Promise<Record<string, unknown>> {
+    return this.fetch('/system/mode');
+  }
+
+  async runLiveIncidentAnalysis(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.fetch('/incidents/live-analysis', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   async modifyPlan(incidentId: string, modifications: Record<string, unknown>): Promise<Record<string, unknown>> {
     return this.fetch(`/incidents/${incidentId}/modify`, {
       method: 'POST',
