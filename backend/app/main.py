@@ -1,4 +1,5 @@
 """Main FastAPI application."""
+from app.agents.critic_agent import CriticSafetyAgent
 import os
 import uuid
 from contextlib import asynccontextmanager
